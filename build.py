@@ -339,7 +339,13 @@ def main() -> int:
                     return 1
             print("dist/ is up to date.")
             return 0
-        build(DIST)
+        # Build into a temporary folder first so a failed build never leaves dist/ half-deleted.
+        with tempfile.TemporaryDirectory() as tmp:
+            staged = Path(tmp) / "dist"
+            build(staged)
+            if DIST.exists():
+                shutil.rmtree(DIST)
+            shutil.copytree(staged, DIST)
     except BuildError as exc:
         print(f"build error: {exc}", file=sys.stderr)
         return 1

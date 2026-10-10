@@ -65,8 +65,9 @@ and tech stack with little extra effort — without troubling them.
 - Check every dependency with `stack-check` before adding it; if it isn't
   approved, use the approved alternative without asking.
 - **Build behaviour test-first** with the `tdd` skill: `test_writer` writes
-  failing **functional, black-box tests** purely from the business
-  requirements (never from the code), `implementer` makes them pass (never
+  failing **functional tests, written as unit tests** that call only
+  modules' public interfaces, purely from the business requirements (never
+  from the code), `implementer` makes them pass (never
   touching tests), and the red/green gates must pass before
   anything is reported as done. You orchestrate — don't write production
   code or tests for behaviour changes yourself. Purely cosmetic changes

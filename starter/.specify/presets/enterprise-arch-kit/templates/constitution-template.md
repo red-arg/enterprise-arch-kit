@@ -37,7 +37,7 @@ internals or data.
 Persistence, identity, secrets/config, messaging, file storage,
 notifications and every external system sit behind ports with a zero-setup
 local adapter and an enterprise production adapter (or fail-fast stub),
-selected by configuration only and verified by running the same functional suite with each profile.
+selected by configuration only and exercised by the functional tests through the test app factory.
 Business code never imports infrastructure.
 
 ### V. Secure and observable by default (AP-04, AP-05)
@@ -63,14 +63,15 @@ recorded in the handoff.
 
 ### VIII. Test-first, written independently
 
-Every behaviour change starts with failing **functional, black-box tests**
-written by `test_writer` purely from the business requirements — acceptance
-scenarios, rules and functional edge cases — driving the system only through
-its external interface and never reading source code. `implementer` makes
+Every behaviour change starts with failing **functional tests written as
+unit tests** by `test_writer` purely from the business requirements —
+acceptance scenarios, rules and functional edge cases — calling only each
+module's public interface in-process through the test app factory, never
+anything behind it. No browser or HTTP tests. `implementer` makes
 them pass and never changes tests. Every new test must fail before
 implementation (no vacuous or tautological tests), and tests must be
 unchanged between red and green. The functional suite is the executable
-specification: it must still pass after any refactor or re-platforming.
+specification: it must still pass after any refactor behind the public interfaces.
 
 ## Enterprise Constraints
 
@@ -99,4 +100,4 @@ constitution. Amendments that add project rules are allowed; amendments that
 relax enterprise standards require an exception ADR approved by the
 architecture team.
 
-**Version**: 1.2.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization
+**Version**: 1.3.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization

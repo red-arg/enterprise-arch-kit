@@ -34,8 +34,8 @@ DEFAULT_TESTS = [
     "*.test.*", "*.spec.*", "*_test.*", "test_*.py", "*/test_*.py", "conftest.py", "*/conftest.py",
     "*Test.java", "*Tests.java", "*IT.java", "*Test.kt", "*Tests.kt",
 ]
-# Functional tests see the system only from outside, so ALL source code is
-# implementation - including module entry points and ports.
+# Functional unit tests call only each module's public interface, so ALL other
+# source code is implementation - domain, use cases, ports, adapters, storage.
 DEFAULT_IMPLEMENTATION = [
     f"{p}{seg}/*" for seg in ("src", "lib", "app", "server", "internal", "cmd", "pkg",
                               "modules", "domain", "application", "adapters", "infrastructure",
@@ -43,9 +43,14 @@ DEFAULT_IMPLEMENTATION = [
                               "handlers", "features", "components", "pages")
     for p in ("", "*/")
 ]
-# The external interface the tests may rely on.
+# What the tests may rely on: each module's public interface file (top level of
+# the module only), the test app factory, and contracts. Patterns starting with
+# "re:" are regular expressions; others are globs.
 DEFAULT_PUBLIC = [
-    "openapi/*", "*/openapi/*", "contracts/*", "*/contracts/*", "asyncapi*", "*/asyncapi*",
+    r"re:(^|/)modules/[^/]+/(index\.(ts|tsx|js|mjs|cjs)|__init__\.py)$",
+    r"re:(^|/)modules/[^/]+/public/[^/]+$",
+    r"re:(^|/)app/test[-_]app\.[a-z]+$",
+    "openapi/*", "*/openapi/*", "contracts/*", "*/contracts/*",
 ]
 READ_TOOLS = re.compile(
     r"\b(cat|less|more|head|tail|sed|awk|bat|nl|strings|xxd|od|grep|egrep|rg|ag|ack|python3?\s+-c|node\s+-e)\b")
@@ -94,9 +99,15 @@ def _rel(path: str, root: Path) -> str:
         return p.as_posix().lstrip("/")
 
 
-def _match(rel: str, globs: list[str]) -> bool:
+def _match(rel: str, patterns: list[str]) -> bool:
     name = rel.rsplit("/", 1)[-1]
-    return any(fnmatch.fnmatchcase(rel, g) or fnmatch.fnmatchcase(name, g) for g in globs)
+    for pat in patterns:
+        if pat.startswith("re:"):
+            if re.search(pat[3:], rel):
+                return True
+        elif fnmatch.fnmatchcase(rel, pat) or fnmatch.fnmatchcase(name, pat):
+            return True
+    return False
 
 
 def is_test(rel: str, cfg: dict) -> bool:
@@ -140,18 +151,19 @@ def hook_test_writer(data: dict) -> int:
     if tool == "Read":
         rel = _rel(inp.get("file_path", ""), root)
         if is_implementation(rel, cfg):
-            return _block(f"test_writer may not read source code ({rel}). Functional tests use only "
-                          "the spec, the plan's acceptance examples, contracts/OpenAPI and quickstart, "
-                          "and drive the running system from outside.")
+            return _block(f"test_writer may not read {rel}. Functional tests use only the spec, the "
+                          "plan, the modules' public interface files and the test app factory - "
+                          "nothing behind the public interface.")
     elif tool == "Grep":
         if not _search_target_allowed(_rel(inp.get("path") or ".", root), cfg):
-            return _block("test_writer: search only within tests, specs/, docs/ or contracts/openapi - "
-                          "not across the codebase (it would expose implementation).")
+            return _block("test_writer: search only within tests, specs/, docs/ or contracts - not "
+                          "across the codebase (it would expose implementation). Read public "
+                          "interface files directly instead.")
     elif tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
         rel = _rel(inp.get("file_path") or inp.get("notebook_path", ""), root)
         if not (is_test(rel, cfg) or rel.startswith(".tdd/")):
-            return _block(f"test_writer writes tests only; {rel} is not a test file. Stubs for the "
-                          "contract's operations are created by the implementer.")
+            return _block(f"test_writer writes tests only; {rel} is not a test file. Stubs for public "
+                          "operations are created by the implementer.")
     elif tool == "Bash":
         cmd = inp.get("command", "")
         if GIT_HISTORY.search(cmd):
@@ -160,7 +172,7 @@ def hook_test_writer(data: dict) -> int:
             for token in _paths_in_command(cmd):
                 rel = _rel(token, root)
                 if is_implementation(rel, cfg) or is_implementation(rel + "/x", cfg):
-                    return _block(f"test_writer may not read implementation ({rel}).")
+                    return _block(f"test_writer may not read {rel} - it's behind the public interface.")
             if re.search(r"\b(grep|rg|ag|ack)\b", cmd) and re.search(r"(\s-\w*r|\brg\b|\bag\b)", cmd) \
                     and not re.search(r"\b(tests?|__tests__|spec|specs|docs|contracts|openapi)\b", cmd):
                 return _block("test_writer: recursive search must be limited to tests, specs, docs "
@@ -237,9 +249,9 @@ def verify_red(before: list[str], after: list[str]) -> int:
         elif status == "skipped":
             problems.append(f"SKIPPED  {tid} - new tests must run and fail.")
         elif LOAD_ERRORS.search(msg):
-            problems.append(f"WRONG REASON  {tid} fails because the test or the system couldn't load "
-                            f"or start ({msg[:120]}). The implementer must add the contract's operations "
-                            f"as stubs (e.g. HTTP 501) and the system must start with the local profile.")
+            problems.append(f"WRONG REASON  {tid} fails because the test couldn't load or the app "
+                            f"couldn't be built ({msg[:120]}). The implementer must add the missing "
+                            f"public operations as stubs that throw 'not implemented'.")
     regressions = [t for t, (s, _) in old.items() if s == "passed" and new.get(t, ("missing",))[0] != "passed"]
     print(f"RED gate: {len(added)} new test(s); {sum(1 for s, _ in added.values() if s in ('failed', 'error'))} failing.")
     for p in problems:

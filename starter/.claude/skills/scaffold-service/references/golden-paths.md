@@ -49,9 +49,15 @@ Rules:
   enterprise access (e.g. PostgreSQL via the same ORM, OIDC with a standard
   library and config). Otherwise generate a stub that throws
   `NotConfiguredError("<port>: production adapter not implemented — see docs/production-handoff.md")`.
-- No per-port test suites: ports are verified through the black-box
-  functional suite, run with the local profile always and with the
-  production profile once production adapters exist.
+- No per-port test suites: ports are exercised by the functional unit
+  tests through the test app factory (local adapters), and the same suite
+  can run with production adapters in an integration environment.
+- **Public interface per module:** one file (`index.ts`, `__init__.py`, or a
+  `public/` package) declaring the module's business-named operations,
+  input/output types and business errors — no logic, no re-exported internal
+  types. It's the only thing functional tests call.
+- **Test app factory** (`src/app/test-app.*`): builds the app in memory with
+  local adapters and test controls; the functional tests' only entry point.
 - Adapter selection lives in a single composition file per deployable
   (`src/app/wiring.*`), driven by config (`DATA_STORE=embedded|postgres`,
   `AUTH_MODE=dev|oidc`, …).
@@ -80,8 +86,7 @@ Rules:
     platform/                   # cross-cutting: config, logging, tracing, auth middleware, errors
     app/wiring.ts               # composition root: picks adapters from config
   test/
-    functional/                 # black-box tests through the API (owned by test_writer)
-      support/                  # harness: start with local profile, base URL, role logins, test controls
+    functional/                 # functional unit tests via public interfaces (owned by test_writer)
       <capability>/
     <capability>/...
   openapi/openapi.yaml

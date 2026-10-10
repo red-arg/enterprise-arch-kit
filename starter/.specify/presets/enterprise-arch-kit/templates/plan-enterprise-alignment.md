@@ -46,14 +46,17 @@
 
 ### Functional Test Boundary
 
-<!-- Everything test_writer may rely on. Tests drive the system only through
-     this boundary, so it must be complete for every acceptance scenario. -->
+<!-- Everything test_writer may rely on. Functional tests are in-process unit
+     tests that call only these public operations, so the boundary must be
+     complete for every acceptance scenario. No browser or HTTP tests. -->
 
-- **External interface:** [e.g. HTTP API in `contracts/openapi.yaml` — every operation the acceptance scenarios need]
-- **Start for tests:** [e.g. `npm run start:local` → base URL from `PORT`, fresh embedded data per start]
-- **Business roles (dev login):** [e.g. `employee`, `manager`, `hr-admin`]
-- **Test controls (local profile only):** [e.g. `FIXED_NOW=2026-03-31T17:00:00+08:00`; fake HR system sample data in `seed/hr/`]
-- **UI journeys worth a browser test:** [P1 journeys only, or "none"]
+| Module | Public interface file | Operations (business names) | Business errors |
+| --- | --- | --- | --- |
+| [leave-requests] | [`src/modules/leave-requests/index.ts`] | [submitLeaveRequest, approveLeaveRequest, getBalance] | [NotEnoughLeave, NotAllowed] |
+
+- **Test app factory:** [e.g. `src/app/test-app.ts` → `createTestApp(options)` — in-memory local adapters, fresh per test]
+- **Acting user / roles:** [e.g. `app.as("manager")` with roles `employee`, `manager`, `hr-admin`]
+- **Test controls (factory options):** [e.g. `{ now: "2026-03-31T17:00:00+08:00" }`, fake HR system sample data]
 
 ### Exceptions
 

@@ -230,8 +230,9 @@ These apply throughout implementation and override any step above that has
 you write tests and code yourself:
 
 1. **Test-first, two agents.** Execute each user story's tasks with the
-   `tdd` skill: `test_writer` writes the failing tests (from spec.md,
-   contracts and public interfaces — never implementation), `implementer`
+   `tdd` skill: `test_writer` writes the failing functional unit tests
+   (from spec.md and the plan, calling only public interfaces through the test
+   app factory — never internals), `implementer`
    creates stubs, makes them pass and refactors (never touching tests). You
    run the `verify-red` and `verify-green` gates between steps and don't
    mark a task done until its gate passes. Don't write tests or production

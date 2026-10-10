@@ -27,45 +27,48 @@ requirements, architecture as built, the status of every swappable
 infrastructure piece, decisions and exceptions, and the remaining gaps with
 owner and effort.
 
-## Test-first, functional, with independent test and code authors
+## Test-first: functional tests, written as unit tests
 
-Every behaviour change is built test-first by two separate agents, and the
-tests are **functional and black-box only**: they drive the running system
-through its external interface (API per the contract, a browser for critical
-journeys, a job's inputs and outputs) and check the business outcomes in the
-spec, including functional edge cases (boundaries, invalid input,
-permissions, state transitions, duplicates, not found, empty/many, time and
-calendar, concurrency, outside systems). No unit, port or adapter tests.
+Every behaviour change is built test-first by two separate agents. The tests
+are **functional** — each checks a business requirement: an acceptance
+scenario, a business rule or a functional edge case (boundaries, invalid
+input, permissions, state transitions, duplicates, not found, empty/many,
+time and calendar, concurrency, outside systems) — and they're written as
+**unit tests**: in-process with the project's unit test framework, fast and
+deterministic. No browser, no Playwright, no HTTP, no running server
+(browser automation tools are on the stack's *hold* list).
 
-Because the tests know nothing about modules, classes, ports or even the
-language, engineers can refactor or re-platform a vibe-coded app onto the
-enterprise standards and use the same suite to prove nothing changed for the
-business. Run with the production profile, the same suite verifies the
-production adapters.
+Tests call only each module's **public interface** — a small, business-named
+set of operations with their input/output types and business errors — through
+a **test app factory** that wires the app in memory with local adapters and
+test controls (fixed clock, acting user, outside-system data). Everything
+behind the public interfaces is invisible to them, so engineers can
+restructure it onto the enterprise standards and the same tests prove nothing
+changed for the business.
 
-1. **RED — `test_writer`** writes failing functional tests from the spec's
-   acceptance scenarios, the plan's hand-worked acceptance examples and the
-   contract. It never sees source code.
-2. **STUB — `implementer`** exposes new contract operations answering
-   "not implemented" (HTTP 501).
+1. **RED — `test_writer`** writes failing functional unit tests from the
+   spec's acceptance scenarios, the plan's hand-worked acceptance examples and
+   the public interfaces. It never sees anything behind them.
+2. **STUB — `implementer`** adds new public operations that throw "not
+   implemented".
 3. **verify-red gate** — every *new* test must fail on an assertion. A test
-   that passes against the stubs is vacuous or tautological and goes back to
-   `test_writer`; a test failing because the system didn't start is rejected.
+   that passes against the stubs (a catch-all error check, say) is vacuous
+   and goes back to `test_writer`; a test that can't even load is rejected.
 4. **GREEN — `implementer`** writes the simplest code that passes; it can't
    change tests.
 5. **verify-green gate** — whole suite passes **and** no test file changed
    since the red commit (a git check, so it works in both tools).
 6. **REFACTOR**, then the architecture and readability reviews.
 
-Tautologies are banned by explicit rules (no echoing input back, no
-same-logic oracles, no status-only or `< 500` checks, no bare snapshots, no
-catch-all errors; every test carries a `Catches:` note naming a plausible
-wrong behaviour) and caught mechanically by the verify-red gate and the
-readability review.
+Tautologies are banned by explicit rules (no echoing inputs, no same-logic
+oracles, no `toBeDefined`-only or catch-all error assertions, no mock or
+interaction assertions, no bare snapshots; every test carries a `Catches:`
+note naming a plausible wrong behaviour) and caught mechanically by the
+verify-red gate and the readability review.
 
 | Rule | Claude Code | Codex |
 | --- | --- | --- |
-| `test_writer` can't read any source code or write non-tests | PreToolUse hook (per agent) | Instructions |
+| `test_writer` sees only public interfaces and the test app factory, writes only tests | PreToolUse hook (per agent) | Instructions |
 | `implementer` can't create, edit or delete tests | PreToolUse hook (per agent) | Instructions + verify-green git check |
 | Tests unchanged during green | verify-green | verify-green |
 | No vacuous tests | verify-red | verify-red |
@@ -85,7 +88,7 @@ suite green. The builder never sees any of this.
   behind interfaces with a **local adapter** (zero setup: embedded database,
   dev login, fake external systems with sample data) and a **production
   adapter** on the enterprise stack. Switching is configuration only, proven
-  by running the same black-box functional suite with each profile.
+  by the functional unit tests through the test app factory.
 
 ## What's inside
 
@@ -111,8 +114,8 @@ suite green. The builder never sees any of this.
 | `solution_designer` | Identifies the business questions that matter, decides the technical design, writes the design brief and seeds the handoff. | Writes `docs/` only |
 | `stack_guardian` | Dependency audit; tells the main agent what to swap. | Read-only, cheap model |
 | `architecture_reviewer` | Standards and production-readiness review. | Read-only, high effort |
-| `test_writer` | Writes failing functional (black-box) tests from the business requirements and the contract, including functional edge cases; never reads source code; each test names the wrong behaviour it catches; no tautologies. | Writes tests only; Claude Code hook blocks reading source code |
-| `implementer` | Exposes contract stubs (501), makes failing functional tests pass on the golden path, refactors with the suite green; never touches tests. | Writes code; Claude Code hook blocks editing tests |
+| `test_writer` | Writes failing functional tests as in-process unit tests from the business requirements, including functional edge cases, calling only modules' public interfaces; each test names the wrong behaviour it catches; no tautologies; no browser or HTTP tests. | Writes tests only; Claude Code hook blocks reading anything behind the public interfaces |
+| `implementer` | Adds public-interface stubs, makes failing functional unit tests pass on the golden path, refactors with the suite green; never touches tests. | Writes code; Claude Code hook blocks editing tests |
 | `readability_reviewer` | Pragmatic Programmer readability review. | Read-only |
 | `handoff_scribe` | Keeps `docs/production-handoff.md` and `docs/adr/` current. | Writes `docs/` only |
 

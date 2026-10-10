@@ -48,7 +48,7 @@ Confirm every finding in the code and cite `file:line` and the standard ID.
   import a database driver, HTTP client, SDK or framework type directly? Is
   every infrastructure need behind a port with a local adapter and a
   production adapter or fail-fast stub? Is adapter selection config-only, in
-  one composition file? Do functional tests exist for the new behaviour, and do they use only the external interface (no imports of source code)?
+  one composition file? Do functional tests exist for the new behaviour, and do they call only modules' public interfaces and the test app factory (no imports of internal code)? Is each module's public interface free of logic and of re-exported internal types?
 - **Modules (PAT-20)** — organized by business capability? Any module
   reaching into another's internals or tables? Business rules leaking into
   routes, UI or adapters?

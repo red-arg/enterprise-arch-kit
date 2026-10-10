@@ -43,7 +43,7 @@ project generator where one exists, then reshape to the layout.
 **Baseline (every project):**
 - [ ] Module(s) named after the business capabilities in the request (PAT-20)
 - [ ] Standard ports with local adapters working and seeded with realistic sample data; production adapters implemented where cheap, otherwise fail-fast stubs (PAT-19)
-- [ ] Functional test harness in `test/functional/support/` (see the `tdd` skill): starts the system with the local profile as `quickstart.md` describes, gives tests the base URL, a contract client, dev login per business role and the documented test controls; runner configured with JUnit XML output; `.tdd/` git-ignored; one passing black-box smoke test (e.g. readiness endpoint). Behaviour is then built test-first with the `tdd` skill — no unit or port tests (CS-03)
+- [ ] Each module's public interface file (business-named operations, input/output types, business errors; no logic) and a **test app factory** (`src/app/test-app.*` / `app/test_app.py`) that wires the app in memory with local adapters and exposes the documented test controls (clock, acting user/role, outside-system data) — see the `tdd` skill; unit test runner with JUnit XML output; `.tdd/` git-ignored; one passing smoke test that builds the app from the factory. Behaviour is then built test-first with the `tdd` skill: functional unit tests only, no browser or HTTP tests (CS-03)
 - [ ] One command to run locally (`npm run dev` / `make dev` / `./gradlew bootRun`), documented at the top of the README
 - [ ] Config from environment with `.env.example`; local profile is the default; no secrets anywhere (CS-08, PAT-11, NN-01)
 - [ ] Structured logging with correlation ID; OpenTelemetry wired with a local no-op exporter (PAT-13); health endpoints (PAT-14)
