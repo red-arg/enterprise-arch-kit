@@ -15,6 +15,7 @@ Requires the Spec Kit CLI (`specify`); run `python3 build.py` first.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -64,13 +65,28 @@ def _normalized(path: Path) -> bytes:
     return data
 
 
+def tree_differences(fresh: Path, committed: Path) -> list[str]:
+    """Describe how two starter trees differ, ignoring Spec Kit install timestamps."""
+    import difflib
+    files_f = {p.relative_to(fresh) for p in fresh.rglob("*") if p.is_file()}
+    files_c = {p.relative_to(committed) for p in committed.rglob("*") if p.is_file()}
+    problems = [f"starter/{f}: missing from starter/ (would be generated)" for f in sorted(files_f - files_c)]
+    problems += [f"starter/{f}: in starter/ but no longer generated" for f in sorted(files_c - files_f)]
+    for f in sorted(files_f & files_c):
+        new, old = _normalized(fresh / f), _normalized(committed / f)
+        if new != old:
+            try:
+                diff = list(difflib.unified_diff(old.decode().splitlines(), new.decode().splitlines(),
+                                                 "committed", "generated", lineterm="", n=0))
+                detail = " | ".join(line for line in diff[2:8])
+            except UnicodeDecodeError:
+                detail = "binary content differs"
+            problems.append(f"starter/{f}: {detail[:400]}")
+    return problems
+
+
 def trees_equal(a: Path, b: Path) -> bool:
-    """Compare two starter trees, ignoring Spec Kit install timestamps."""
-    files_a = {p.relative_to(a) for p in a.rglob("*") if p.is_file()}
-    files_b = {p.relative_to(b) for p in b.rglob("*") if p.is_file()}
-    if files_a != files_b:
-        return False
-    return all(_normalized(a / f) == _normalized(b / f) for f in files_a)
+    return not tree_differences(a, b)
 
 
 def main() -> int:
@@ -90,8 +106,12 @@ def main() -> int:
         with tempfile.TemporaryDirectory() as tmp:
             fresh = Path(tmp) / "starter"
             generate(fresh)
-            if not OUT.exists() or not trees_equal(fresh, OUT):
+            problems = ["starter/ does not exist"] if not OUT.exists() else tree_differences(fresh, OUT)
+            if problems:
+                annotate = os.environ.get("GITHUB_ACTIONS") == "true"
                 print("starter/ is out of date. Run: python3 make_starter.py", file=sys.stderr)
+                for problem in problems[:20]:
+                    print(("::error::" if annotate else "  ") + problem, file=sys.stderr if not annotate else sys.stdout)
                 return 1
         print("starter/ is up to date.")
         return 0
