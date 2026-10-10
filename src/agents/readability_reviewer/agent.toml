@@ -1,0 +1,13 @@
+name = "readability_reviewer"
+description = "Read-only code readability reviewer based on The Pragmatic Programmer (ETC, DRY, orthogonality, decoupling, naming, crash early). Returns the few highest-value findings with file:line and concrete suggestions. Use after code is implemented, before a commit or PR, or when asked about readability or maintainability."
+skills = ["readability-review"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Bash"]
+model = "inherit"
+effort = "medium"
+color = "cyan"
+
+[codex]
+sandbox_mode = "read-only"
+model_reasoning_effort = "medium"

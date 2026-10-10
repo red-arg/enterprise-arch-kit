@@ -16,3 +16,4 @@
 | CS-09 | **Comments and docs** | Public APIs documented (OpenAPI, docstrings). Comments explain *why*, not *what*. Deviations reference their ADR. |
 | CS-10 | **Generated and AI-assisted code** | Treat AI-generated code like any other contribution: it must pass review, tests and scans. Don't commit code you can't explain. |
 | CS-11 | **Branching and commits** | Trunk-based with short-lived branches, PRs require review and green CI. TODO: commit message convention (e.g. Conventional Commits). |
+| CS-12 | **Readability** | Code is reviewed for readability and ease of change against the Pragmatic Programmer principles (`RD-01`–`RD-16`) in the `readability-review` skill. |

@@ -25,7 +25,8 @@ Delegate these automatically — the developer doesn't need to ask:
 | --- | --- |
 | Starting something new: an app, service, data store, integration, or a feature whose approach is unclear | `solution_designer` — then build with the `scaffold-service` skill |
 | Dependencies were added or changed | `stack_guardian` |
-| A feature is finished, before a commit/PR, or the developer asks "is this OK?" | `architecture_reviewer` |
+| A feature is finished, before a commit/PR, or the developer asks "is this OK?" | `architecture_reviewer` and `readability_reviewer`, in parallel |
+| The developer asks about readability, clean code or maintainability | `readability_reviewer` |
 | A deviation or significant decision was agreed | `adr_scribe` |
 
 Relay each agent's summary to the developer in plain language. Don't paste

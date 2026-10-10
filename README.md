@@ -20,6 +20,7 @@ for both **Claude Code** and **OpenAI Codex**.
 | `scaffold-service` | Starts new APIs, frontends, workers and jobs on a golden path with auth, config, logging, OTel, CI, Dockerfile and ADRs wired in. |
 | `architecture-review` | Checklist and report format: verdict, must-fix, deviations (fix or ADR), unassessed, recommendations — each with `file:line` and a standard ID. |
 | `write-adr` | Numbered ADRs in `docs/adr/`, including *exception* ADRs with standards affected, expiry and exit plan. |
+| `readability-review` | Readability and ease-of-change review using *The Pragmatic Programmer* principles (`RD-01`–`RD-16`: ETC, DRY, orthogonality, tell-don't-ask, naming, crash early…), capped at the 7 most valuable findings with before/after suggestions. |
 
 ### Subagents
 
@@ -29,6 +30,7 @@ for both **Claude Code** and **OpenAI Codex**.
 | `stack_guardian` | Fast dependency audit with approved alternatives. | Read-only, cheap model |
 | `architecture_reviewer` | Reviews a branch/PR/design against the standards. | Read-only, high effort |
 | `adr_scribe` | Records decisions and exceptions as ADRs. | Writes `docs/adr/` |
+| `readability_reviewer` | Reviews implemented code for readability and ease of change (Pragmatic Programmer). Runs alongside `architecture_reviewer` when a feature is done. | Read-only |
 
 ### Project instructions
 
@@ -93,6 +95,7 @@ trigger the right agent. To call things directly:
 | Start a project | `/scaffold-service` | `$scaffold-service` |
 | Can I use X? | `/stack-check can I use MongoDB?` | `$stack-check can I use MongoDB?` |
 | Review my branch | `@"architecture_reviewer (agent)" review this branch` | "Spawn architecture_reviewer to review this branch vs main" |
+| Readability review | `@"readability_reviewer (agent)" review my changes` or `/readability-review` | "Spawn readability_reviewer to review my changes" or `$readability-review` |
 | Record an exception | "Have adr_scribe record an exception for using Flask" | "Spawn adr_scribe to record an exception for using Flask" |
 
 CI example (fails on retired or newly-added hold dependencies):
