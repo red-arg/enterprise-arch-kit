@@ -75,7 +75,7 @@ and a production adapter (enterprise stack). Switching is configuration only (PA
 | Messaging | | in-process | Kafka (STK-40) | | | | |
 | <External system> | | Fake with sample data | <system API> | | | | |
 
-Contract tests shared by both adapters: <path or Gap>.
+Functional suite (`test/functional/`) result with the production profile: <passed / not yet run / Gap> — the same black-box tests verify both profiles.
 
 ## 6. Standards alignment
 
@@ -103,7 +103,7 @@ Builder preferences not followed (for context):
 
 Baseline checklist (mark each Ready / Gap / N/A):
 
-- [ ] Production adapters implemented and contract-tested for every port (§5)
+- [ ] Production adapters implemented for every port (§5) and the full functional suite passes with the production profile
 - [ ] Corporate IdP login and role checks on every endpoint (PAT-10, PAT-12)
 - [ ] Secrets from secrets manager; nothing sensitive in repo (NN-01, PAT-11)
 - [ ] Structured logs, traces, health endpoints, alerts for the tier (PAT-13, PAT-14)

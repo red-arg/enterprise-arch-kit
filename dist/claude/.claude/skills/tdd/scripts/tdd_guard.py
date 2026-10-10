@@ -34,15 +34,18 @@ DEFAULT_TESTS = [
     "*.test.*", "*.spec.*", "*_test.*", "test_*.py", "*/test_*.py", "conftest.py", "*/conftest.py",
     "*Test.java", "*Tests.java", "*IT.java", "*Test.kt", "*Tests.kt",
 ]
+# Functional tests see the system only from outside, so ALL source code is
+# implementation - including module entry points and ports.
 DEFAULT_IMPLEMENTATION = [
-    f"{p}{seg}/*" for seg in ("domain", "application", "adapters", "infrastructure", "api",
-                              "migrations", "controllers", "services", "repositories", "handlers",
-                              "features", "components", "pages")
+    f"{p}{seg}/*" for seg in ("src", "lib", "app", "server", "internal", "cmd", "pkg",
+                              "modules", "domain", "application", "adapters", "infrastructure",
+                              "api", "migrations", "controllers", "services", "repositories",
+                              "handlers", "features", "components", "pages")
     for p in ("", "*/")
-] + ["*/app/wiring.*", "app/wiring.*"]
+]
+# The external interface the tests may rely on.
 DEFAULT_PUBLIC = [
-    "*/ports/*", "ports/*", "*/index.ts", "*/index.js", "*/index.tsx", "*/__init__.py",
-    "openapi/*", "*/openapi/*", "contracts/*", "*/contracts/*", "*.d.ts",
+    "openapi/*", "*/openapi/*", "contracts/*", "*/contracts/*", "asyncapi*", "*/asyncapi*",
 ]
 READ_TOOLS = re.compile(
     r"\b(cat|less|more|head|tail|sed|awk|bat|nl|strings|xxd|od|grep|egrep|rg|ag|ack|python3?\s+-c|node\s+-e)\b")
@@ -50,7 +53,8 @@ GIT_HISTORY = re.compile(r"\bgit\s+(show|diff|blame|log\s+.*-p|log\s+.*--patch|g
 MUTATING = re.compile(r"(\brm\b|\bmv\b|\bcp\b|\bsed\s+-i|\btee\b|\btruncate\b|>>?|\bgit\s+(checkout|restore|rm|mv|reset|stash))")
 ARTEFACT = re.compile(r"(^|/)(__pycache__|node_modules|\.tdd|\.pytest_cache|build|target|dist|coverage)/|\.(pyc|class)$")
 LOAD_ERRORS = re.compile(
-    r"(Cannot find module|Failed to load|ModuleNotFoundError|ImportError|SyntaxError|"
+    r"(ECONNREFUSED|[Cc]onnection refused|fetch failed|EADDRINUSE|did not start|failed to start|"
+    r"Timed out waiting for|Cannot find module|Failed to load|ModuleNotFoundError|ImportError|SyntaxError|"
     r"error while loading|cannot find symbol|package .* does not exist|undefined: |"
     r"Failed to resolve import|is not defined|No such file or directory)", re.I)
 
@@ -115,7 +119,7 @@ def _paths_in_command(command: str) -> list[str]:
     return [t.strip("'\"") for t in re.split(r"\s+", command) if "/" in t or "." in t]
 
 
-SAFE_TOP_LEVEL = ("specs", "docs", "openapi", "contracts", ".tdd")
+SAFE_TOP_LEVEL = ("specs", "docs", "openapi", "contracts", ".tdd", "test", "tests")
 
 
 def _search_target_allowed(rel: str, cfg: dict) -> bool:
@@ -136,17 +140,18 @@ def hook_test_writer(data: dict) -> int:
     if tool == "Read":
         rel = _rel(inp.get("file_path", ""), root)
         if is_implementation(rel, cfg):
-            return _block(f"test_writer may not read implementation ({rel}). Write tests from the spec, "
-                          "plan, contracts and public interfaces (ports, module entry points).")
+            return _block(f"test_writer may not read source code ({rel}). Functional tests use only "
+                          "the spec, the plan's acceptance examples, contracts/OpenAPI and quickstart, "
+                          "and drive the running system from outside.")
     elif tool == "Grep":
         if not _search_target_allowed(_rel(inp.get("path") or ".", root), cfg):
-            return _block("test_writer: search only within tests, specs/, docs/, contracts/openapi or "
-                          "ports - not across the codebase (it would expose implementation).")
+            return _block("test_writer: search only within tests, specs/, docs/ or contracts/openapi - "
+                          "not across the codebase (it would expose implementation).")
     elif tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
         rel = _rel(inp.get("file_path") or inp.get("notebook_path", ""), root)
         if not (is_test(rel, cfg) or rel.startswith(".tdd/")):
-            return _block(f"test_writer writes tests only; {rel} is not a test file. Interface stubs are "
-                          "created by the implementer.")
+            return _block(f"test_writer writes tests only; {rel} is not a test file. Stubs for the "
+                          "contract's operations are created by the implementer.")
     elif tool == "Bash":
         cmd = inp.get("command", "")
         if GIT_HISTORY.search(cmd):
@@ -157,9 +162,9 @@ def hook_test_writer(data: dict) -> int:
                 if is_implementation(rel, cfg) or is_implementation(rel + "/x", cfg):
                     return _block(f"test_writer may not read implementation ({rel}).")
             if re.search(r"\b(grep|rg|ag|ack)\b", cmd) and re.search(r"(\s-\w*r|\brg\b|\bag\b)", cmd) \
-                    and not re.search(r"\b(tests?|__tests__|spec|specs|docs|contracts|openapi|ports)\b", cmd):
-                return _block("test_writer: recursive search must be limited to tests, specs, docs, "
-                              "contracts or ports.")
+                    and not re.search(r"\b(tests?|__tests__|spec|specs|docs|contracts|openapi)\b", cmd):
+                return _block("test_writer: recursive search must be limited to tests, specs, docs "
+                              "or contracts.")
     return 0
 
 
@@ -232,8 +237,9 @@ def verify_red(before: list[str], after: list[str]) -> int:
         elif status == "skipped":
             problems.append(f"SKIPPED  {tid} - new tests must run and fail.")
         elif LOAD_ERRORS.search(msg):
-            problems.append(f"WRONG REASON  {tid} fails because it can't load ({msg[:120]}). "
-                            f"The implementer must add interface stubs first.")
+            problems.append(f"WRONG REASON  {tid} fails because the test or the system couldn't load "
+                            f"or start ({msg[:120]}). The implementer must add the contract's operations "
+                            f"as stubs (e.g. HTTP 501) and the system must start with the local profile.")
     regressions = [t for t, (s, _) in old.items() if s == "passed" and new.get(t, ("missing",))[0] != "passed"]
     print(f"RED gate: {len(added)} new test(s); {sum(1 for s, _ in added.values() if s in ('failed', 'error'))} failing.")
     for p in problems:

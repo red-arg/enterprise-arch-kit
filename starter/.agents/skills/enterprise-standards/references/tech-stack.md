@@ -48,7 +48,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 ### npm
 
-- **adopt:** `react`, `react-dom`, `next`, `@nestjs/*`, `typescript`, `zod`, `pino`, `@opentelemetry/*`, `vitest`, `jest`, `@testing-library/*`, `eslint`, `prettier`, `pg`, `kafkajs`, `ioredis`, `axios`, `@types/*`
+- **adopt:** `react`, `react-dom`, `next`, `@nestjs/*`, `typescript`, `zod`, `pino`, `@opentelemetry/*`, `vitest`, `jest`, `@testing-library/*`, `@playwright/test`, `eslint`, `prettier`, `pg`, `kafkajs`, `ioredis`, `axios`, `@types/*`
 - **trial:** `mongoose`, `drizzle-orm`, `prisma`, `@prisma/client`
 - **local:** `@electric-sql/pglite`, `better-sqlite3`, `msw`
 - **hold:** `express`, `moment`, `request`, `mysql`, `mysql2`, `winston`, `sequelize`
@@ -56,7 +56,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 ### pypi
 
-- **adopt:** `fastapi`, `uvicorn`, `pydantic`, `pydantic-settings`, `sqlalchemy`, `alembic`, `psycopg`, `psycopg2-binary`, `httpx`, `structlog`, `opentelemetry-*`, `pytest`, `pytest-*`, `ruff`, `mypy`, `confluent-kafka`, `redis`, `pandas`, `numpy`
+- **adopt:** `fastapi`, `uvicorn`, `pydantic`, `pydantic-settings`, `sqlalchemy`, `alembic`, `psycopg`, `psycopg2-binary`, `httpx`, `structlog`, `opentelemetry-*`, `pytest`, `pytest-*`, `playwright`, `ruff`, `mypy`, `confluent-kafka`, `redis`, `pandas`, `numpy`
 - **trial:** `polars`, `pymongo`, `motor`
 - **local:** `aiosqlite`, `respx`, `fakeredis`
 - **hold:** `flask`, `django`, `requests`, `pymysql`, `mysqlclient`
@@ -64,7 +64,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 ### maven
 
-- **adopt:** `org.springframework.boot:*`, `org.springframework:*`, `org.postgresql:postgresql`, `org.flywaydb:*`, `io.opentelemetry:*`, `org.apache.kafka:*`, `org.springframework.kafka:*`, `org.junit.jupiter:*`, `org.mockito:*`, `org.testcontainers:*`, `com.fasterxml.jackson.core:*`, `org.projectlombok:lombok`, `org.slf4j:*`, `ch.qos.logback:*`
+- **adopt:** `org.springframework.boot:*`, `org.springframework:*`, `org.postgresql:postgresql`, `org.flywaydb:*`, `io.opentelemetry:*`, `org.apache.kafka:*`, `org.springframework.kafka:*`, `org.junit.jupiter:*`, `org.mockito:*`, `org.testcontainers:*`, `io.rest-assured:*`, `com.fasterxml.jackson.core:*`, `org.projectlombok:lombok`, `org.slf4j:*`, `ch.qos.logback:*`
 - **trial:** `org.mongodb:*`, `io.micrometer:*`
 - **local:** `com.h2database:h2`
 - **hold:** `mysql:mysql-connector-java`, `com.mysql:mysql-connector-j`, `com.rabbitmq:*`, `junit:junit`

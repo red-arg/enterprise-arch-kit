@@ -49,8 +49,9 @@ Rules:
   enterprise access (e.g. PostgreSQL via the same ORM, OIDC with a standard
   library and config). Otherwise generate a stub that throws
   `NotConfiguredError("<port>: production adapter not implemented — see docs/production-handoff.md")`.
-- One contract test suite per port, run against the local adapter always and
-  the production adapter in CI when configured.
+- No per-port test suites: ports are verified through the black-box
+  functional suite, run with the local profile always and with the
+  production profile once production adapters exist.
 - Adapter selection lives in a single composition file per deployable
   (`src/app/wiring.*`), driven by config (`DATA_STORE=embedded|postgres`,
   `AUTH_MODE=dev|oidc`, …).
@@ -79,7 +80,9 @@ Rules:
     platform/                   # cross-cutting: config, logging, tracing, auth middleware, errors
     app/wiring.ts               # composition root: picks adapters from config
   test/
-    contract/<port>.spec.ts     # same tests for local and production adapters
+    functional/                 # black-box tests through the API (owned by test_writer)
+      support/                  # harness: start with local profile, base URL, role logins, test controls
+      <capability>/
     <capability>/...
   openapi/openapi.yaml
   migrations/

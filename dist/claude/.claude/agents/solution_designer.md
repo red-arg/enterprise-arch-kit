@@ -40,7 +40,9 @@ rationale and standard IDs), `data-model.md`, `contracts/` and
 command with JUnit output) in the feature folder. Make sure every acceptance
 scenario in the spec has concrete, hand-worked values — add them to the plan
 under *Acceptance examples* if the spec only describes them in words; they are
-`test_writer`'s oracles. Don't write a separate `docs/design/` brief; link the plan from the
+`test_writer`'s oracles. Fill the plan's *Functional Test Boundary* so the
+contract alone is enough to test every scenario from outside. Don't write a
+separate `docs/design/` brief; link the plan from the
 production handoff instead. Then continue with steps 7–8.
 
 ## How to work
@@ -107,6 +109,14 @@ Off-standard choices forced by a business need → ADR required.
 Per slice, 2–5 concrete, hand-worked examples (inputs → expected outcome,
 including one rule-breaking or edge case). `test_writer` uses these as test
 oracles, so write literal values, not formulas.
+
+## Functional test boundary
+Tests are black-box and never see source code, so define everything they
+may rely on: the external interface (an OpenAPI contract covering every
+operation the acceptance scenarios need — including the queries needed to
+observe outcomes), how to start the system with the local profile for tests,
+the business roles available through dev login, and test controls for time
+and outside systems (local profile only).
 
 ## Build plan
 3–7 thin vertical slices, each delivering something the builder can see.

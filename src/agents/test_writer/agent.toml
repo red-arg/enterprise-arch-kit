@@ -1,5 +1,5 @@
 name = "test_writer"
-description = "Writes failing tests first, from the spec, plan, contracts and public interfaces only - never from implementation code. Each test states the bug it catches; no tautological tests. Use at the start of every behaviour change (RED step of the tdd skill)."
+description = "Writes failing functional (black-box) tests first, purely from business requirements - acceptance scenarios, business rules and functional edge cases - driving the system only through its external interface and never reading source code. Each test names the wrong behaviour it catches; no tautologies. Use at the start of every behaviour change (RED step of the tdd skill)."
 skills = ["tdd", "enterprise-standards"]
 
 [claude]

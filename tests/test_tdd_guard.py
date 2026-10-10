@@ -51,13 +51,20 @@ class HookTests(unittest.TestCase):
         self.assertEqual(self.decide("test-writer", "Bash", command="cat src/modules/leave/application/a.ts"), "block")
         self.assertEqual(self.decide("test-writer", "Bash", command="git diff HEAD~1"), "block")
         self.assertEqual(self.decide("test-writer", "Grep", pattern="approve"), "block")
+        # Functional tests see no source at all - not even module entry points or ports.
+        for path in ("src/modules/leave/index.ts", "src/modules/leave/ports/repo.ts", "app/main.py",
+                     "apps/api/src/main.ts", "src/main/java/x/App.java"):
+            self.assertEqual(self.decide("test-writer", "Read", file_path=path), "block", path)
+        self.assertEqual(self.decide("test-writer", "Bash", command="grep -rn approve src"), "block")
 
     def test_test_writer_can_read_spec_tests_and_public_interfaces(self):
-        for path in ("specs/001-leave/spec.md", "test/leave/a.test.ts", "src/modules/leave/ports/repo.ts",
-                     "src/modules/leave/index.ts", "openapi/openapi.yaml"):
+        for path in ("specs/001-leave/spec.md", "specs/001-leave/contracts/openapi.yaml",
+                     "test/functional/leave.test.ts", "openapi/openapi.yaml", "docs/production-handoff.md",
+                     "src/test/java/x/LeaveFunctionalTest.java"):
             self.assertEqual(self.decide("test-writer", "Read", file_path=path), "allow", path)
         self.assertEqual(self.decide("test-writer", "Grep", pattern="x", path="test"), "allow")
-        self.assertEqual(self.decide("test-writer", "Bash", command="npx vitest run test/leave"), "allow")
+        self.assertEqual(self.decide("test-writer", "Grep", pattern="x", path="specs"), "allow")
+        self.assertEqual(self.decide("test-writer", "Bash", command="npx vitest run test/functional"), "allow")
 
     def test_test_writer_writes_only_tests(self):
         self.assertEqual(self.decide("test-writer", "Write", file_path="test/leave/new.test.ts"), "allow")
@@ -117,6 +124,15 @@ class GateTests(unittest.TestCase):
         r = self.red_gate({"tests/test_leave.py::rejects": "error:ModuleNotFoundError: No module named leave"})
         self.assertIn("WRONG REASON", r.stdout)
         self.assertEqual(r.returncode, 1)
+
+    def test_red_flags_tests_failing_because_the_system_did_not_start(self):
+        r = self.red_gate({"tests/test_leave.py::rejects": "error:httpx.ConnectError: [Errno 111] Connection refused"})
+        self.assertIn("WRONG REASON", r.stdout)
+        self.assertEqual(r.returncode, 1)
+
+    def test_red_accepts_failures_against_501_stubs(self):
+        r = self.red_gate({"tests/test_leave.py::rejects": "failed:assert 501 == 422"})
+        self.assertEqual(r.returncode, 0, r.stdout)
 
     def test_red_requires_new_tests(self):
         r = self.red_gate({"tests/test_smoke.py::smoke": "passed"})

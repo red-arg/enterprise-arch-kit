@@ -223,8 +223,9 @@ Apply the *Enterprise Task Rules* section of the tasks template. Tests are
 
 - Setup from the golden path (`scaffold-service`) for a new deployable,
   ending with a passing smoke test.
-- Ports built test-first: contract tests by `test_writer`, then adapters by
-  `implementer`.
+- Functional test harness and ports in the foundational phase; ports get no
+  tests of their own — the functional suite verifies them.
+- Only functional (black-box) test tasks: no unit, port or adapter tests.
 - Every user story as the test-first cycle in order: `[RED] test_writer` →
   `[STUB] implementer` → `[GATE] verify-red` → `[GREEN] implementer` →
   `[GATE] verify-green` → `[REFACTOR] implementer` → `[REVIEW]` →

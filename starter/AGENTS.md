@@ -66,8 +66,9 @@ and tech stack with little extra effort — without troubling them.
 - Check every dependency with `stack-check` before adding it; if it isn't
   approved, use the approved alternative without asking.
 - **Build behaviour test-first** with the `tdd` skill: `test_writer` writes
-  failing tests from the spec (never from the code), `implementer` makes them
-  pass (never touching tests), and the red/green gates must pass before
+  failing **functional, black-box tests** purely from the business
+  requirements (never from the code), `implementer` makes them pass (never
+  touching tests), and the red/green gates must pass before
   anything is reported as done. You orchestrate — don't write production
   code or tests for behaviour changes yourself. Purely cosmetic changes
   (wording, colours, layout) and setup skip the cycle but must keep the whole
@@ -80,7 +81,7 @@ The builder never needs to name these agents:
 | Situation | Agent |
 | --- | --- |
 | Starting something new, adding a major capability, or the approach is unclear | `solution_designer` (asks business questions, decides the technical design) |
-| Any new or changed behaviour: write the failing tests first | `test_writer` (RED) |
+| Any new or changed behaviour: write the failing functional tests first | `test_writer` (RED) |
 | Make the failing tests pass, stubs and refactoring | `implementer` (STUB, GREEN, REFACTOR) |
 | Dependencies were added or changed | `stack_guardian` |
 | A piece of work is finished (tests green), or before a commit/PR | `architecture_reviewer` and `readability_reviewer`, in parallel |

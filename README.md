@@ -27,33 +27,45 @@ requirements, architecture as built, the status of every swappable
 infrastructure piece, decisions and exceptions, and the remaining gaps with
 owner and effort.
 
-## Test-first, with independent test and code authors
+## Test-first, functional, with independent test and code authors
 
-Every behaviour change is built test-first by two separate agents so tests
-describe what the business needs, not how the code happens to work:
+Every behaviour change is built test-first by two separate agents, and the
+tests are **functional and black-box only**: they drive the running system
+through its external interface (API per the contract, a browser for critical
+journeys, a job's inputs and outputs) and check the business outcomes in the
+spec, including functional edge cases (boundaries, invalid input,
+permissions, state transitions, duplicates, not found, empty/many, time and
+calendar, concurrency, outside systems). No unit, port or adapter tests.
 
-1. **RED — `test_writer`** writes failing tests from the spec's acceptance
-   scenarios, the plan's hand-worked acceptance examples, contracts and public
-   interfaces. It never sees implementation code.
-2. **STUB — `implementer`** adds public signatures that throw "not implemented".
-3. **verify-red gate** — every *new* test must fail, and for the right
-   reason. A new test that passes against a stub is vacuous or tautological
-   and goes back to `test_writer`.
+Because the tests know nothing about modules, classes, ports or even the
+language, engineers can refactor or re-platform a vibe-coded app onto the
+enterprise standards and use the same suite to prove nothing changed for the
+business. Run with the production profile, the same suite verifies the
+production adapters.
+
+1. **RED — `test_writer`** writes failing functional tests from the spec's
+   acceptance scenarios, the plan's hand-worked acceptance examples and the
+   contract. It never sees source code.
+2. **STUB — `implementer`** exposes new contract operations answering
+   "not implemented" (HTTP 501).
+3. **verify-red gate** — every *new* test must fail on an assertion. A test
+   that passes against the stubs is vacuous or tautological and goes back to
+   `test_writer`; a test failing because the system didn't start is rejected.
 4. **GREEN — `implementer`** writes the simplest code that passes; it can't
    change tests.
 5. **verify-green gate** — whole suite passes **and** no test file changed
    since the red commit (a git check, so it works in both tools).
 6. **REFACTOR**, then the architecture and readability reviews.
 
-Tautologies are banned by explicit rules (no asserting mocks, no same-logic
-oracles, no echo/getter tests, no `toBeDefined`-only or catch-all assertions,
-no interaction-only checks; every test carries a `Catches:` note naming a
-plausible bug) and caught mechanically by the verify-red gate and the
+Tautologies are banned by explicit rules (no echoing input back, no
+same-logic oracles, no status-only or `< 500` checks, no bare snapshots, no
+catch-all errors; every test carries a `Catches:` note naming a plausible
+wrong behaviour) and caught mechanically by the verify-red gate and the
 readability review.
 
 | Rule | Claude Code | Codex |
 | --- | --- | --- |
-| `test_writer` can't read implementation or write non-tests | PreToolUse hook (per agent) | Instructions |
+| `test_writer` can't read any source code or write non-tests | PreToolUse hook (per agent) | Instructions |
 | `implementer` can't create, edit or delete tests | PreToolUse hook (per agent) | Instructions + verify-green git check |
 | Tests unchanged during green | verify-green | verify-green |
 | No vacuous tests | verify-red | verify-red |
@@ -73,7 +85,7 @@ suite green. The builder never sees any of this.
   behind interfaces with a **local adapter** (zero setup: embedded database,
   dev login, fake external systems with sample data) and a **production
   adapter** on the enterprise stack. Switching is configuration only, proven
-  by shared contract tests.
+  by running the same black-box functional suite with each profile.
 
 ## What's inside
 
@@ -99,8 +111,8 @@ suite green. The builder never sees any of this.
 | `solution_designer` | Identifies the business questions that matter, decides the technical design, writes the design brief and seeds the handoff. | Writes `docs/` only |
 | `stack_guardian` | Dependency audit; tells the main agent what to swap. | Read-only, cheap model |
 | `architecture_reviewer` | Standards and production-readiness review. | Read-only, high effort |
-| `test_writer` | Writes failing tests from the spec, contracts and public interfaces — never from implementation code; each test names the bug it catches; no tautologies. | Writes tests only; Claude Code hook blocks reading implementation |
-| `implementer` | Creates stubs, makes failing tests pass on the golden path, refactors with the suite green; never touches tests. | Writes code; Claude Code hook blocks editing tests |
+| `test_writer` | Writes failing functional (black-box) tests from the business requirements and the contract, including functional edge cases; never reads source code; each test names the wrong behaviour it catches; no tautologies. | Writes tests only; Claude Code hook blocks reading source code |
+| `implementer` | Exposes contract stubs (501), makes failing functional tests pass on the golden path, refactors with the suite green; never touches tests. | Writes code; Claude Code hook blocks editing tests |
 | `readability_reviewer` | Pragmatic Programmer readability review. | Read-only |
 | `handoff_scribe` | Keeps `docs/production-handoff.md` and `docs/adr/` current. | Writes `docs/` only |
 
@@ -181,7 +193,7 @@ ever deals with the *what and why*:
 | `speckit-specify` | No technology in specs; a mandatory **Business Context** section (Q1–Q8, Confirmed/Assumed); clarification markers must be business questions |
 | `speckit-clarify` | At most 3 plain business questions from the question bank; technical requirements are derived, never asked |
 | `speckit-plan` | Delegated to `solution_designer`; technical context decided from the standards; mandatory **Enterprise Alignment** section (derived requirements, golden path, modules, ports, standards trace, exceptions) |
-| `speckit-tasks` | Tasks per port and module, contract tests, review and handoff tasks per user story |
+| `speckit-tasks` | Test-first tasks per user story (functional tests → stubs → gates → implementation → refactor), review and handoff tasks |
 | `speckit-implement` | Golden path, `stack-check`, parallel reviews with fix-now applied, handoff updated, plain-language outcome |
 
 The preset composes onto Spec Kit's own commands (`prepend`/`append`), so

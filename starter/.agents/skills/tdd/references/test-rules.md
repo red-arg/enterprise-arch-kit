@@ -1,96 +1,136 @@
-# Test-writing rules
+# Test-writing rules — functional, black-box, requirement-driven
 
 > For the `test_writer` agent. Tests are written **before** the behaviour
-> exists, from the specification and the public interface — never from the
-> implementation. A good test is a precise, executable statement of a
-> business rule that a plausible wrong implementation would fail.
-> TODO(engineering): add language-specific conventions (naming, folders,
-> runner) for your golden paths.
+> exists, from the business requirements, and exercise the **running
+> system through its external interface only**. They must not know how the
+> system is built — not its modules, classes, functions, ports, database or
+> even its language — so the implementation can be refactored or re-platformed
+> onto enterprise standards and the same tests prove nothing changed for the
+> business.
+> TODO(engineering): add your conventions for the functional test runner,
+> folders and naming per golden path.
 
-## What to test (sources, in priority order)
+## Only functional tests
 
-1. **Acceptance scenarios** from the spec (Given/When/Then), one or more
-   tests each, named after the scenario (e.g. `US1-AS2`).
-2. **Business rules and edge cases** in the requirements: limits, states,
-   permissions, invalid inputs, empty results, duplicates, time boundaries.
-3. **Contracts:** for each port in the plan (PAT-19), a contract test suite
-   that any adapter must pass — run against the local adapter now and the
-   production adapter later. For each external API in `contracts/`, request
-   and response behaviour at the HTTP boundary.
-4. **Error behaviour** the user would notice: validation messages, refusal
-   of unauthorized actions, problem-details responses (CS-04).
+Every test answers: *"Does the system do what the business asked, as a user
+or calling system would observe it?"*
+
+| Write | Don't write (engineering adds these later, if at all) |
+| --- | --- |
+| Acceptance scenarios from the spec | Unit tests of functions, classes or components |
+| Business rules and their functional edge cases | Tests of ports, adapters, repositories or the database |
+| User-visible errors and refusals | Tests that call internal module entry points |
+| Permissions as the business defines them (who may do what) | Mocks or spies of any internal part |
+| Behaviour across steps (create → approve → report) | Architecture, layering, performance, load or security-scan tests |
+
+## The external interface (your only way in)
+
+| Deployable | Drive it through | Observe outcomes through |
+| --- | --- | --- |
+| API / back-end / full stack | HTTP requests defined in `contracts/` (OpenAPI) | HTTP responses: status, body fields, follow-up queries via the API |
+| User interface (critical journeys only) | A real browser, by visible labels and roles (never CSS selectors or test IDs tied to markup) | What the user sees: text, lists, messages |
+| Event worker | The input events defined in `contracts/` | Output events and state visible through the API |
+| Scheduled job | Its documented run command and input files | Output files, messages and state visible through the API |
+
+- Start the system the way `quickstart.md` says, with the **local profile**
+  (embedded storage, dev login, fake external systems). The shared harness in
+  `test/functional/support/` does this; extend it, don't bypass it.
+- **Set up data through the external interface** (create a request via the
+  API), or through the local profile's documented seed data. Never write to
+  the database or call internal code to arrange a test.
+- **Log in as business roles** using the local profile's dev login (e.g.
+  "employee", "manager"), as documented in the plan.
+- **Control time and outside systems only through documented test
+  controls** of the local profile (e.g. a fixed-clock setting, a fake HR
+  system's sample data). If a rule depends on time or an outside system and
+  no control is documented, report it — don't reach inside.
 
 ## What you may look at
 
-- The spec, plan, `data-model.md`, `contracts/`, `quickstart.md`.
-- Public interfaces: module public entry points (`index.*`), `ports/`,
-  OpenAPI specs, existing tests.
-- **Not** implementation: `domain/`, `application/`, `adapters/`,
-  `infrastructure/`, `api/` route handlers, migrations. If you can't write a
-  test without knowing how something is built, the interface is unclear —
-  report that instead of looking.
+- The spec: user stories, acceptance scenarios, requirements, edge cases,
+  Business Context.
+- The plan's *Acceptance Examples* (hand-worked values) and test controls.
+- `contracts/` / OpenAPI / AsyncAPI, `quickstart.md`, `data-model.md` as a
+  description of business concepts (not storage).
+- Existing functional tests and the harness under `test/functional/`.
+- **Nothing under the source folders.** If the contract doesn't tell you
+  enough to write a test, the contract is incomplete — report what's missing.
+
+## Functional edge cases — work through this list for every rule
+
+| Category | Examples to consider |
+| --- | --- |
+| Boundaries | exactly at a limit, one below, one above; zero; maximum length |
+| Missing or invalid input | required field empty, wrong format, negative numbers, dates in the past |
+| Permissions | each role allowed/forbidden; acting on someone else's record |
+| State transitions | actions not allowed in the current state (approve an already-approved request; edit after submission) |
+| Duplicates and repeats | submitting the same thing twice; retrying after a failure (idempotency the business expects) |
+| Not found | referring to something that doesn't exist or was deleted |
+| Empty and many | no records yet; one record; several records with ordering and totals |
+| Time and calendar | end of day/month/year, weekends and holidays if the rule cares, time zones the business operates in |
+| Concurrency as the business sees it | two people acting on the same item; the second sees a clear outcome |
+| Outside systems | the other system has no data, or is unavailable — what the user should see |
+
+Only write the edge cases the spec or business context makes meaningful;
+each must still cite the rule it protects. If the spec is silent on an
+important edge case, list it as a question rather than inventing the answer.
 
 ## Every test must be able to fail
 
-Each test must fail for at least one **plausible wrong implementation**. Put
-that in the test as a one-line comment or in its name:
+Each test names a plausible wrong behaviour it would catch:
 
 ```ts
-// Catches: approving a request that exceeds the remaining balance
-it("rejects a 5-day request when only 3 days remain", ...)
+// US2-AS3 · Catches: a manager approving their own leave request
+test("a manager cannot approve their own request", ...)
 ```
 
-If you can't name a realistic bug the test would catch, delete the test.
+If you can't name a realistic wrong behaviour the business would care
+about, delete the test.
 
 ## Tautologies — never write these
 
 | Tautology | Example | Why it's worthless |
 | --- | --- | --- |
-| **Asserting the mock** | stub `repo.find()` to return X, call `service.get()`, assert X | Tests the stub, not the behaviour; passes for any implementation that forwards the call. |
-| **Same-logic oracle** | `expect(total).toBe(items.reduce((s,i)=>s+i.price*i.qty,0))` | Re-implements the code under test; wrong in the same way the code is. Use a hand-worked number: `toBe(42.50)`. |
-| **Echo tests** | set a field, assert the getter returns it; construct an object, assert its fields | Tests the language, not a business rule. |
-| **Always-true assertions** | `expect(result).toBeDefined()`, `assert x is not None` as the only check, `assertTrue(true)` | Passes for almost any wrong result. Assert the specific expected value. |
-| **Interaction-only tests** | assert `repo.save` was called once with `any()` | Pins *how* not *what*. Assert the observable outcome (the request can now be found with status `approved`). Only assert an interaction when the interaction *is* the behaviour (an email is sent) — and then check it through the port's fake, with the meaningful content. |
-| **Snapshot of everything** | snapshot a whole response or component with no specific assertion | Approves whatever the code produces first. Assert the fields that matter. |
-| **Testing the framework** | assert that the HTTP library returns 404 for unknown routes, that the ORM saves | Not our behaviour. |
-| **Conditional or looping assertions** | `if (result) expect(...)`, assertions in a loop over the result itself | Can silently assert nothing. |
-| **Catch-all exceptions** | `expect(() => f()).toThrow()` with no type or message | Passes on any crash, including the not-implemented stub. Assert the specific error and message. |
+| **Asserting what you just sent** | POST a request with `days: 3`, assert the response echoes `days: 3`, nothing else | Proves the API echoes input, not that any rule ran. Assert the business outcome (status `pending`, remaining balance `12`). |
+| **Same-logic oracle** | `expect(balance).toBe(start - requested)` | Re-implements the rule; wrong in the same way the code is. Use the hand-worked literal: `toBe(12)`. |
+| **Always-true assertions** | only `status < 500`, only `body` is defined, `assert True` | Pass for almost any wrong behaviour. Assert the exact status, fields and message the spec requires. |
+| **Status-only checks** | assert 200 and stop | A wrong body passes. Check the business fields that matter. |
+| **Snapshot of everything** | snapshot a whole response or page | Approves whatever exists first. Assert the specific fields or visible text. |
+| **Testing the framework** | unknown route returns 404, JSON is parsed | Not a business behaviour. |
+| **Conditional or looping assertions** | `if (res.ok) expect(...)`; asserting inside a loop over the response itself | Can silently assert nothing. |
+| **Catch-all failures** | expecting "any 4xx" or "some error" | Passes on the not-implemented stub. Assert the specific status and the user-facing message from the spec. |
 
 ## How to write them
 
-- **Concrete examples as oracles.** Use the spec's examples or hand-worked
-  values. Inputs and expected outputs are literals, not computed.
-- **Test through the public interface**, at the level the business sees:
-  module entry points, ports, HTTP contracts. Never private functions.
-- **Prefer real local adapters over mocks.** The local adapters (embedded
-  database, in-process bus, fake external systems) are real implementations
-  of the ports — use them via the normal wiring. Use a hand-written fake
-  only for things you must control (clock, IDs, external failures).
-- **Assert outcomes**: return values, state visible through public queries,
-  events/notifications captured by a port's fake, HTTP status and body.
-- **Deterministic**: inject time, IDs and randomness; no real network; no
-  sleeps; no dependence on test order.
-- **One behaviour per test**, Arrange–Act–Assert, readable as documentation:
-  `"<does what> when <condition>"`.
-- **Specific failures**: assert the exact error type/code and the
-  user-visible message from the spec.
-- **No test data copied from production**; use invented, realistic data (NN-02).
+- **Literal oracles** from the spec's examples or the plan's acceptance
+  examples — never computed in the test.
+- **One business behaviour per test**, Arrange–Act–Assert, named as the
+  business would say it: `"<role> can/cannot <action> when <condition>"`,
+  prefixed with the scenario ID.
+- **Independent tests**: each creates its own data through the interface;
+  no reliance on order or on other tests' data.
+- **Deterministic**: fixed clock via the documented control; no real
+  external systems; no sleeps — poll the interface for an eventual outcome
+  with a short timeout if the spec says "eventually".
+- **No real or production data** — invented, realistic values (NN-02).
 
 ## Self-check before handing over
 
 For every test, answer yes to all:
 
-1. Does it trace to a scenario, rule, contract or error case (cite it)?
-2. Would it fail for the bug named in its "Catches" note?
-3. Would it still pass after a correct refactor of the implementation?
-4. Is the expected value a literal or hand-worked example, not recomputed?
-5. Does it avoid every tautology in the table above?
+1. Does it trace to a scenario, rule or edge case in the spec (cite it)?
+2. Does it use only the external interface and documented test controls?
+3. Would it fail for the wrong behaviour named in its "Catches" note?
+4. Would it still pass if the whole implementation were rewritten — any
+   language, any structure — with the same business behaviour?
+5. Are expected values literals or hand-worked examples, not recomputed?
+6. Does it avoid every tautology above?
 
 ## The vacuous-test gate (automatic)
 
-After your tests are written, the implementer creates stubs (signatures that
-throw "not implemented"), and the suite is run. **Every new test must fail.**
-A new test that passes against a stub, or against the existing code before
-the change, is vacuous or tautological and comes back to you to fix or
-remove — unless you can show the behaviour already exists, in which case
-keep it as a regression test and say so.
+After your tests are written, the implementer adds the operations from the
+contract as stubs that answer "not implemented" (HTTP 501), and the suite is
+run. **Every new test must fail, and fail on an assertion** — not because the
+system couldn't start or the test couldn't load. A new test that passes
+against the stubs is vacuous and comes back to you to fix or remove, unless
+the behaviour already exists (then keep it as a regression test and say so).

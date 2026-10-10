@@ -43,7 +43,7 @@ project generator where one exists, then reshape to the layout.
 **Baseline (every project):**
 - [ ] Module(s) named after the business capabilities in the request (PAT-20)
 - [ ] Standard ports with local adapters working and seeded with realistic sample data; production adapters implemented where cheap, otherwise fail-fast stubs (PAT-19)
-- [ ] Test runner configured with JUnit XML output (see the `tdd` skill) and `.tdd/` git-ignored; one passing smoke test. Behaviour (use cases, port contracts) is then built test-first with the `tdd` skill, not written during scaffolding (CS-03)
+- [ ] Functional test harness in `test/functional/support/` (see the `tdd` skill): starts the system with the local profile as `quickstart.md` describes, gives tests the base URL, a contract client, dev login per business role and the documented test controls; runner configured with JUnit XML output; `.tdd/` git-ignored; one passing black-box smoke test (e.g. readiness endpoint). Behaviour is then built test-first with the `tdd` skill — no unit or port tests (CS-03)
 - [ ] One command to run locally (`npm run dev` / `make dev` / `./gradlew bootRun`), documented at the top of the README
 - [ ] Config from environment with `.env.example`; local profile is the default; no secrets anywhere (CS-08, PAT-11, NN-01)
 - [ ] Structured logging with correlation ID; OpenTelemetry wired with a local no-op exporter (PAT-13); health endpoints (PAT-14)
