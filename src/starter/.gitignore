@@ -1,0 +1,27 @@
+# Secrets and local settings — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local data from the zero-setup adapters
+.data/
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+target/
+.next/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.gradle/
+
+# Editors and OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store

@@ -1,0 +1,25 @@
+{
+  "name": "Build with AI (enterprise)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/java:1": { "version": "21" },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "postCreateCommand": "npm install -g @openai/codex",
+  "forwardPorts": [3000, 5173, 8000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "Your app", "onAutoForward": "openPreview" },
+    "5173": { "label": "Your app", "onAutoForward": "openPreview" },
+    "8000": { "label": "Your app (server)", "onAutoForward": "notify" },
+    "8080": { "label": "Your app (server)", "onAutoForward": "notify" }
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb" },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["START-HERE.md"]
+    }
+  }
+}

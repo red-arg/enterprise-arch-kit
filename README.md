@@ -54,6 +54,7 @@ owner and effort.
 | `stack-check` | Decides whether a technology is allowed, plus a stdlib-only script auditing package.json, requirements, pyproject, go.mod, pom.xml, Gradle and .csproj — new vs existing usage, and `local`-only packages. |
 | `architecture-review` | Standards and productionizability review, sorted into *fix now* (main agent), *record for production* (handoff), *business fact needed* and *exceptions*. |
 | `readability-review` | *The Pragmatic Programmer* review (`RD-01`–`RD-16`: ETC, DRY, orthogonality, naming, crash early…), sorted into *fix now* and *record*. |
+| `install` | One-time, explicit-only setup for the builder (`/install` / `$install`): workspace checks, automatic saving, project owner, handoff started, plain-language "you're ready". |
 | `write-adr` | ADRs for decisions and exceptions made by the agents on the builder's behalf, awaiting architecture approval. |
 
 ### Subagents
@@ -94,6 +95,41 @@ particular, which only spawns subagents when asked or when `AGENTS.md` says to.
 When the builder asks "can this go live?", the agents confirm the assumed
 business facts with plain questions and hand the engineering team the
 handoff, with a readiness verdict.
+
+## For vibe coders: the starter template
+
+The easiest way to give people the kit is the **starter template** in
+`starter/`: an empty project with everything pre-installed for Claude Code
+and Codex — agents, skills, project rules, Spec Kit with the enterprise
+preset and constitution — plus a dev container so it runs in **GitHub
+Codespaces** with nothing to install.
+
+What a builder does (also in `starter/START-HERE.md`, written for them):
+
+1. **Use this template** → create their own repository.
+2. **Code → Codespaces → Create codespace.**
+3. Type `claude` or `codex` in the terminal and sign in.
+4. Run **`/install`** (Claude Code) or **`$install`** (Codex) once — it asks
+   their name and team, prepares automatic saving, starts the production
+   handoff, and tells them they're ready.
+5. From then on they just describe what they want.
+
+`install` is explicit-only (`disable-model-invocation` in Claude Code,
+`allow_implicit_invocation: false` in Codex), so requests like "install a
+chart library" never trigger it. If someone skips it, the main agent does the
+essential setup silently. Work is committed automatically at every working
+step and described in plain words ("Saved."); pushing to GitHub happens when
+the builder asks or accepts a one-time offer.
+
+**Publishing the starter:** create an empty repository (e.g.
+`enterprise-vibe-starter`), copy the contents of `starter/` into it, push,
+then tick **Settings → Template repository**. Regenerate after changing the
+kit:
+
+```bash
+pip install specify-cli==1.1.3
+python3 build.py && python3 make_starter.py      # CI runs make_starter.py --check
+```
 
 ## Spec-driven workflow with GitHub Spec Kit (optional)
 
@@ -212,6 +248,8 @@ Tips:
 build.py      # src/ → dist/claude, dist/codex, dist/speckit-preset (validates names, tools, TOML, stack.json, preset files)
 install.py    # dist/ → a project or your home folder; --speckit adds the Spec Kit preset
 speckit_integration.py        # Spec Kit setup, preset install, Codex mirroring, constitution
+make_starter.py               # generates starter/ (template project for vibe coders)
+starter/                      # generated; publish as a GitHub template repository
 src/          # edit here (src/speckit-preset/ is the Spec Kit preset)
 dist/         # generated, committed for convenience
 .github/workflows/check.yml   # build --check, checker, installer and Spec Kit end-to-end tests

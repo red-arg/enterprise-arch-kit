@@ -1,0 +1,74 @@
+{
+  "_readme": "Single source of truth for the approved tech stack. TODO(architecture-team): every entry below is an illustrative example - replace with your real radar. Statuses: adopt | trial | hold | retire, plus 'local' for packages allowed only in local adapters and tests (PAT-19), never in production code paths. tech-stack.md is generated from this file by build.py; check_stack.py reads the 'packages' section. Package names support * wildcards.",
+  "version": "0.1.0",
+  "owner": "TODO: Architecture team (email / channel)",
+  "last_reviewed": "TODO: YYYY-MM-DD",
+  "technologies": [
+    { "id": "STK-01", "category": "Backend language", "name": "Java 21 (LTS)", "status": "adopt", "notes": "Default for transactional backend services." },
+    { "id": "STK-02", "category": "Backend language", "name": "TypeScript on Node.js 22 (LTS)", "status": "adopt", "notes": "BFFs, lightweight APIs, tooling." },
+    { "id": "STK-03", "category": "Backend language", "name": "Python 3.12+", "status": "adopt", "notes": "Data, ML and automation workloads." },
+    { "id": "STK-04", "category": "Backend language", "name": "Go", "status": "trial", "notes": "Platform tooling and high-throughput infra components; needs a named owner." },
+    { "id": "STK-05", "category": "Backend language", "name": "PHP, Ruby", "status": "hold", "notes": "No new services." },
+    { "id": "STK-10", "category": "Backend framework", "name": "Spring Boot 3", "status": "adopt", "notes": "Java services." },
+    { "id": "STK-11", "category": "Backend framework", "name": "NestJS", "status": "adopt", "notes": "TypeScript services." },
+    { "id": "STK-12", "category": "Backend framework", "name": "FastAPI", "status": "adopt", "notes": "Python APIs." },
+    { "id": "STK-13", "category": "Backend framework", "name": "Express (bare)", "status": "hold", "notes": "Use NestJS for new services." },
+    { "id": "STK-14", "category": "Backend framework", "name": "Flask", "status": "hold", "notes": "Use FastAPI for new services." },
+    { "id": "STK-20", "category": "Frontend", "name": "React 19 + TypeScript", "status": "adopt", "notes": "Default for web UIs." },
+    { "id": "STK-21", "category": "Frontend", "name": "Next.js", "status": "adopt", "notes": "When SSR/SEO is needed." },
+    { "id": "STK-22", "category": "Frontend", "name": "Enterprise design system (TODO: name)", "status": "adopt", "notes": "Mandatory for user-facing UIs." },
+    { "id": "STK-23", "category": "Frontend", "name": "Angular, Vue", "status": "hold", "notes": "Existing apps only." },
+    { "id": "STK-24", "category": "Frontend", "name": "jQuery, AngularJS", "status": "retire", "notes": "Migrate." },
+    { "id": "STK-30", "category": "Data store", "name": "PostgreSQL (managed)", "status": "adopt", "notes": "Default relational store." },
+    { "id": "STK-31", "category": "Data store", "name": "Redis (managed)", "status": "adopt", "notes": "Caching and ephemeral state only, not system of record." },
+    { "id": "STK-32", "category": "Data store", "name": "MongoDB", "status": "trial", "notes": "Document workloads with clear justification." },
+    { "id": "STK-33", "category": "Data store", "name": "MySQL", "status": "hold", "notes": "Use PostgreSQL for new work." },
+    { "id": "STK-34", "category": "Data store", "name": "Embedded databases (PGlite, SQLite, H2)", "status": "adopt", "notes": "Local adapters and tests only, behind the persistence port (PAT-19). Never in production. Prefer PostgreSQL-compatible options (PGlite, H2 in PostgreSQL mode) so the production switch is configuration only." },
+    { "id": "STK-40", "category": "Messaging", "name": "Apache Kafka (managed)", "status": "adopt", "notes": "Event streaming (PAT-07)." },
+    { "id": "STK-41", "category": "Messaging", "name": "RabbitMQ", "status": "hold", "notes": "Existing usage only." },
+    { "id": "STK-50", "category": "Platform", "name": "Kubernetes (enterprise platform)", "status": "adopt", "notes": "Default runtime for services." },
+    { "id": "STK-51", "category": "Platform", "name": "Serverless functions (TODO: provider)", "status": "trial", "notes": "Event-driven glue; not for core services." },
+    { "id": "STK-52", "category": "Platform", "name": "Terraform", "status": "adopt", "notes": "All infrastructure as code (PAT-17)." },
+    { "id": "STK-53", "category": "Platform", "name": "GitHub Actions (TODO: or your CI)", "status": "adopt", "notes": "Standard pipelines." },
+    { "id": "STK-60", "category": "Observability", "name": "OpenTelemetry", "status": "adopt", "notes": "Traces and metrics (PAT-13)." },
+    { "id": "STK-61", "category": "Security", "name": "Corporate IdP via OIDC (TODO: name)", "status": "adopt", "notes": "PAT-10." },
+    { "id": "STK-62", "category": "Security", "name": "Secrets manager (TODO: name)", "status": "adopt", "notes": "PAT-11." }
+  ],
+  "packages": {
+    "npm": {
+      "adopt": ["react", "react-dom", "next", "@nestjs/*", "typescript", "zod", "pino", "@opentelemetry/*", "vitest", "jest", "@testing-library/*", "eslint", "prettier", "pg", "kafkajs", "ioredis", "axios", "@types/*"],
+      "trial": ["mongoose", "drizzle-orm", "prisma", "@prisma/client"],
+      "hold": ["express", "moment", "request", "mysql", "mysql2", "winston", "sequelize"],
+      "retire": ["jquery", "angular", "left-pad", "node-sass", "tslint"],
+      "local": ["@electric-sql/pglite", "better-sqlite3", "msw"]
+    },
+    "pypi": {
+      "adopt": ["fastapi", "uvicorn", "pydantic", "pydantic-settings", "sqlalchemy", "alembic", "psycopg", "psycopg2-binary", "httpx", "structlog", "opentelemetry-*", "pytest", "pytest-*", "ruff", "mypy", "confluent-kafka", "redis", "pandas", "numpy"],
+      "trial": ["polars", "pymongo", "motor"],
+      "hold": ["flask", "django", "requests", "pymysql", "mysqlclient"],
+      "retire": ["nose", "pycrypto", "simplejson"],
+      "local": ["aiosqlite", "respx", "fakeredis"]
+    },
+    "maven": {
+      "adopt": ["org.springframework.boot:*", "org.springframework:*", "org.postgresql:postgresql", "org.flywaydb:*", "io.opentelemetry:*", "org.apache.kafka:*", "org.springframework.kafka:*", "org.junit.jupiter:*", "org.mockito:*", "org.testcontainers:*", "com.fasterxml.jackson.core:*", "org.projectlombok:lombok", "org.slf4j:*", "ch.qos.logback:*"],
+      "trial": ["org.mongodb:*", "io.micrometer:*"],
+      "hold": ["mysql:mysql-connector-java", "com.mysql:mysql-connector-j", "com.rabbitmq:*", "junit:junit"],
+      "retire": ["log4j:log4j", "commons-httpclient:commons-httpclient"],
+      "local": ["com.h2database:h2"]
+    },
+    "go": {
+      "adopt": ["go.opentelemetry.io/*", "github.com/jackc/pgx/*", "github.com/stretchr/testify"],
+      "trial": ["github.com/go-chi/chi/*"],
+      "hold": ["github.com/go-sql-driver/mysql"],
+      "retire": ["github.com/pkg/errors"],
+      "local": ["modernc.org/sqlite"]
+    },
+    "nuget": {
+      "adopt": [],
+      "trial": [],
+      "hold": [],
+      "retire": [],
+      "local": []
+    }
+  }
+}

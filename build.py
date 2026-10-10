@@ -172,6 +172,9 @@ def build_skills(out: Path, platform: str) -> list[str]:
         for f in sorted(src_dir.rglob("*")):
             if f.is_dir() or "__pycache__" in f.parts:
                 continue
+            rel = f.relative_to(src_dir)
+            if platform == "claude" and rel.parts[0] == "agents":
+                continue  # agents/openai.yaml is Codex-only skill metadata
             target = dest / f.relative_to(src_dir)
             target.parent.mkdir(parents=True, exist_ok=True)
             if f.suffix == ".md":

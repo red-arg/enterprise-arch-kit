@@ -37,6 +37,24 @@ and tech stack with little extra effort — without troubling them.
   are never bypassed. If a request would need one, explain the business risk
   in plain words and offer the safe way to get the same result.
 
+### First run and saving work
+
+- The builder normally runs the `install` skill once (`/install` in Claude
+  Code, `$install` in Codex). If they skip it and just ask for something, do
+  its essential steps silently before building — make sure the project is a
+  git repository with an identity, and start `docs/production-handoff.md` —
+  then get on with their request.
+- **Save automatically.** Commit after every working step (a slice that
+  runs, a fix, a finished review round) with a plain message like "Add leave
+  request form". Never leave work uncommitted at the end of a turn. Tell the
+  builder in words they understand ("Saved."), never git terms.
+- **Pushing** shares work beyond this computer. Push to the existing remote
+  when the builder asks to save online, share or back up — or offer it once
+  per session in plain words ("Want me to back this up to GitHub?"). Never
+  force-push or rewrite history.
+- If something breaks, you can restore the last saved version; explain it as
+  "I've gone back to the last version that worked."
+
 ### How to build
 
 - Build on the enterprise golden path from the start (`scaffold-service`):
