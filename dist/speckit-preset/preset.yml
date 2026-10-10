@@ -1,0 +1,84 @@
+schema_version: "1.0"
+
+preset:
+  id: "enterprise-arch-kit"
+  name: "Enterprise Architecture Kit"
+  version: "1.0.0"
+  description: "Business-only specs and clarifications for non-technical builders; technical plans decided by the enterprise solution_designer on the approved stack."
+  author: "enterprise-arch-kit"
+  repository: "https://github.com/red-arg/enterprise-arch-kit"
+  license: "MIT"
+
+requires:
+  speckit_version: ">=1.0.0"
+
+provides:
+  templates:
+    # ---- Templates (what gets produced) -----------------------------------
+    - type: "template"
+      name: "constitution-template"
+      file: "templates/constitution-template.md"
+      description: "Enterprise constitution: decide-don't-ask, approved stack, swappable infrastructure, production handoff"
+      replaces: "constitution-template"
+
+    - type: "template"
+      name: "spec-template"
+      file: "templates/spec-business-context.md"
+      description: "Adds a Business Context section (plain-language facts, Confirmed/Assumed) to every spec"
+      strategy: "append"
+
+    - type: "template"
+      name: "plan-template"
+      file: "templates/plan-enterprise-alignment.md"
+      description: "Adds enterprise alignment (golden path, modules, ports, standards trace, handoff) to every plan"
+      strategy: "append"
+
+    - type: "template"
+      name: "tasks-template"
+      file: "templates/tasks-enterprise.md"
+      description: "Adds enterprise structure and review tasks to every task list"
+      strategy: "append"
+
+    # ---- Commands (how the agent produces it) -----------------------------
+    # Composed onto the core commands so their scripts and extension hooks keep working.
+    - type: "command"
+      name: "speckit.constitution"
+      file: "commands/speckit.constitution.md"
+      description: "Build the constitution from the enterprise standards, not from the builder"
+      strategy: "prepend"
+
+    - type: "command"
+      name: "speckit.specify"
+      file: "commands/speckit.specify.md"
+      description: "Business-only specification for non-technical builders"
+      strategy: "prepend"
+
+    - type: "command"
+      name: "speckit.clarify"
+      file: "commands/speckit.clarify.md"
+      description: "Ask only plain business questions; derive technical requirements"
+      strategy: "prepend"
+
+    - type: "command"
+      name: "speckit.plan"
+      file: "commands/speckit.plan.md"
+      description: "Technical plan decided by solution_designer from the enterprise standards"
+      strategy: "prepend"
+
+    - type: "command"
+      name: "speckit.tasks"
+      file: "commands/speckit.tasks.md"
+      description: "Tasks follow modules, ports and contract tests"
+      strategy: "append"
+
+    - type: "command"
+      name: "speckit.implement"
+      file: "commands/speckit.implement.md"
+      description: "Implement on the golden path, then review and update the production handoff"
+      strategy: "append"
+
+tags:
+  - "enterprise"
+  - "architecture"
+  - "governance"
+  - "non-technical"

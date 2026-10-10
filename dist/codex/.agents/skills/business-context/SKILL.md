@@ -34,8 +34,12 @@ classifications or protocols. This skill turns one into the other.
 3. Translate each answer with the table in `references/question-bank.md`
    into technical requirements (tier, classification, access model, scale,
    integration and compliance needs) — with the standard IDs.
-4. Record both the business answer (in the builder's words) and the derived
+4. If the project uses Spec Kit, also record the answer in the current
+   feature spec's **Business Context** table (Confirmed/Assumed) — the spec
+   holds business facts only; derived technical requirements go to the plan
+   and the handoff.
+5. Record both the business answer (in the builder's words) and the derived
    requirements in the production handoff's *Business context* and *Derived
    requirements* sections, marking each as **Confirmed** (the builder said so)
    or **Assumed** (default used).
-5. Continue building. Don't explain the derived requirements to the builder.
+6. Continue building. Don't explain the derived requirements to the builder.

@@ -5,6 +5,7 @@
     python3 install.py /path/to/project --claude   # Claude Code only
     python3 install.py /path/to/project --codex    # Codex only
     python3 install.py --user                      # both tools, for every project on this machine
+    python3 install.py /path/to/project --speckit  # also set up GitHub Spec Kit with the enterprise preset
     python3 install.py /path/to/project --uninstall
 
 What it does
@@ -13,6 +14,11 @@ What it does
   - Adds (or refreshes) a marked block in AGENTS.md / CLAUDE.md. Your existing
     content in those files is kept. When both tools are installed, CLAUDE.md
     imports AGENTS.md instead of duplicating it.
+  - With --speckit (project scope only): initializes GitHub Spec Kit if
+    needed, installs the `enterprise-arch-kit` preset (business-only specs,
+    plans by solution_designer) for the chosen tools, and sets the enterprise
+    constitution unless the project's constitution has been edited. Requires
+    the `specify` CLI (uv tool install specify-cli).
 
 Run `python3 build.py` first if you changed anything under src/.
 """
@@ -122,6 +128,8 @@ def main() -> int:
     ap.add_argument("--claude", action="store_true", help="install for Claude Code")
     ap.add_argument("--codex", action="store_true", help="install for Codex")
     ap.add_argument("--user", action="store_true", help="install into your home folder instead of a project")
+    ap.add_argument("--speckit", action="store_true",
+                    help="also set up GitHub Spec Kit with the enterprise preset (project scope only)")
     ap.add_argument("--uninstall", action="store_true", help="remove the kit's files and instruction block")
     args = ap.parse_args()
 
@@ -132,6 +140,8 @@ def main() -> int:
         ap.error("give a project folder, or --user (not both)")
     if args.project is not None and not args.project.is_dir():
         ap.error(f"{args.project} is not a folder")
+    if args.speckit and args.user:
+        ap.error("--speckit works per project; give a project folder instead of --user")
 
     platforms = [p for p in ("codex", "claude") if getattr(args, p)] or ["codex", "claude"]
     both = len(platforms) == 2
@@ -143,6 +153,23 @@ def main() -> int:
         print(f"{verb} for {name}:")
         for path in paths:
             print(f"  {path}")
+    project = args.project.resolve() if args.project else None
+    speckit_here = project is not None and (args.speckit or (args.uninstall and (project / ".specify").exists()))
+    if speckit_here:
+        import speckit_integration as sk
+        try:
+            if args.uninstall:
+                lines = sk.teardown(project)
+            else:
+                # Claude first so it becomes the active Spec Kit integration when both are requested
+                order = [p for p in ("claude", "codex") if p in platforms]
+                lines = sk.setup(project, DIST / "speckit-preset", order)
+        except sk.SpecKitError as exc:
+            print(f"\nSpec Kit: {exc}", file=sys.stderr)
+            return 1
+        print("Spec Kit:")
+        for line in lines:
+            print(f"  {line}")
     if not args.uninstall:
         print("\nNext: edit the standards in src/skills/enterprise-standards/references/, "
               "run build.py, and re-run this installer to update.")

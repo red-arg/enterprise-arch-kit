@@ -24,3 +24,35 @@ jobs:
           test "$(grep -c 'enterprise-arch-kit:start' /tmp/proj/AGENTS.md)" = 1
           python3 install.py /tmp/proj --uninstall
           test ! -e /tmp/proj/AGENTS.md
+
+  speckit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Spec Kit CLI
+        run: pip install specify-cli
+      - name: Install kit with Spec Kit preset (Claude Code + Codex)
+        run: |
+          mkdir -p /tmp/sk && git -C /tmp/sk init -q
+          python3 install.py /tmp/sk --speckit
+          for d in .claude/skills .agents/skills; do
+            for s in specify clarify plan tasks implement constitution; do
+              grep -q "Enterprise Rules" "/tmp/sk/$d/speckit-$s/SKILL.md"
+            done
+          done
+          grep -q "Business decides what, agents decide how" /tmp/sk/.specify/memory/constitution.md
+      - name: Templates compose at runtime
+        run: |
+          cd /tmp/sk
+          git -c user.name=ci -c user.email=ci@example.com commit -qm init --allow-empty
+          spec=$(bash .specify/scripts/bash/create-new-feature.sh --json "CI feature" | tail -1 | python3 -c "import json,sys; print(json.load(sys.stdin)['SPEC_FILE'])")
+          grep -q "Business Context" "$spec"
+      - name: Uninstall restores core Spec Kit skills
+        run: |
+          python3 install.py /tmp/sk --uninstall
+          for f in /tmp/sk/.claude/skills/speckit-plan/SKILL.md /tmp/sk/.agents/skills/speckit-plan/SKILL.md; do
+            if grep -q "Enterprise Rules" "$f"; then echo "preset still present in $f"; exit 1; fi
+          done

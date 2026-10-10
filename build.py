@@ -254,6 +254,23 @@ def codex_agent(spec: dict) -> str:
 
 
 # ------------------------------------------------------------------ build
+def build_speckit_preset(out: Path) -> None:
+    """Copy the Spec Kit preset verbatim after checking every referenced file exists."""
+    src = SRC / "speckit-preset"
+    if not src.exists():
+        return
+    manifest = (src / "preset.yml").read_text()
+    for ref in re.findall(r'^\s*file:\s*"?([^"\n]+)"?', manifest, re.M):
+        if not (src / ref.strip()).is_file():
+            raise BuildError(f"speckit-preset/preset.yml references missing file {ref.strip()}")
+    for f in (src / "commands").glob("*.md"):
+        text = f.read_text()
+        for skill in re.findall(r"`([a-z]+(?:-[a-z]+)+)` skill", text):
+            if not (SRC / "skills" / skill).is_dir():
+                raise BuildError(f"{f.name} references unknown skill {skill!r}")
+    shutil.copytree(src, out / "speckit-preset")
+
+
 def build(out: Path) -> None:
     if out.exists():
         shutil.rmtree(out)
@@ -274,6 +291,7 @@ def build(out: Path) -> None:
             for a in agents:
                 (agents_dir / f"{a['name']}.toml").write_text(codex_agent(a))
             (base / "AGENTS.md").write_text(instructions)
+    build_speckit_preset(out)
 
 
 def dirs_equal(a: Path, b: Path) -> bool:

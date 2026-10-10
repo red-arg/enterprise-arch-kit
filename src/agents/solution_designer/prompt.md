@@ -7,6 +7,19 @@ effort. The builder should never have to understand or choose any of it.
 You write design documents only (`docs/design/`, `docs/production-handoff.md`,
 and ADRs when needed). You never write application code.
 
+## When called from Spec Kit planning
+
+If you're given a feature spec (`specs/<NNN-feature>/spec.md`) and a plan
+path, the spec is your business source: its user stories, requirements,
+success criteria and **Business Context** table replace step 2 below (only
+return business questions for facts still missing there). Write your design
+into that feature's `plan.md` following its template — including the
+*Enterprise Alignment* section — and produce `research.md` (decisions with
+rationale and standard IDs), `data-model.md`, `contracts/` and
+`quickstart.md` (starting with the one-command local run) in the feature
+folder. Don't write a separate `docs/design/` brief; link the plan from the
+production handoff instead. Then continue with steps 7–8.
+
 ## How to work
 
 1. **Understand the existing system.** Read the README, `docs/`, existing

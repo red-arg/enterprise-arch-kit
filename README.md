@@ -95,6 +95,43 @@ When the builder asks "can this go live?", the agents confirm the assumed
 business facts with plain questions and hand the engineering team the
 handoff, with a readiness verdict.
 
+## Spec-driven workflow with GitHub Spec Kit (optional)
+
+The kit integrates with [GitHub Spec Kit](https://github.com/github/spec-kit)
+through an **`enterprise-arch-kit` preset** (`src/speckit-preset/`). Spec Kit
+captures *what and why* before *how*; the preset makes sure the builder only
+ever deals with the *what and why*:
+
+| Spec Kit step | What the preset adds |
+| --- | --- |
+| `speckit-constitution` | Enterprise constitution generated from the standards (decide-don't-ask, approved stack, golden path, swappable infrastructure, production handoff, review gates) — not authored by the builder |
+| `speckit-specify` | No technology in specs; a mandatory **Business Context** section (Q1–Q8, Confirmed/Assumed); clarification markers must be business questions |
+| `speckit-clarify` | At most 3 plain business questions from the question bank; technical requirements are derived, never asked |
+| `speckit-plan` | Delegated to `solution_designer`; technical context decided from the standards; mandatory **Enterprise Alignment** section (derived requirements, golden path, modules, ports, standards trace, exceptions) |
+| `speckit-tasks` | Tasks per port and module, contract tests, review and handoff tasks per user story |
+| `speckit-implement` | Golden path, `stack-check`, parallel reviews with fix-now applied, handoff updated, plain-language outcome |
+
+The preset composes onto Spec Kit's own commands (`prepend`/`append`), so
+core scripts, extension hooks and future Spec Kit updates keep working. The
+builder never types these commands: the `AGENTS.md` rules run them when
+something new is requested.
+
+```bash
+uv tool install specify-cli            # or: pipx install specify-cli
+python3 install.py /path/to/project --speckit             # both tools
+python3 install.py /path/to/project --claude --speckit    # one tool
+```
+
+`--speckit` initializes Spec Kit if needed, installs the preset, and sets the
+enterprise constitution — unless the project's constitution has been edited,
+in which case it's left alone. Tested with Spec Kit 1.1.3.
+
+> **Note — both tools in one project:** Spec Kit 1.x applies preset skill
+> overrides only to its *active* integration. The installer applies the
+> preset natively to Claude Code and mirrors the composed skills to Codex
+> (adjusting `/speckit-` → `$speckit-`). If you later run
+> `specify integration upgrade codex`, re-run the installer.
+
 ## Quick start
 
 Requires Python 3.11+ (standard library only).
@@ -172,9 +209,10 @@ Tips:
 ## Repository layout
 
 ```
-build.py      # src/ → dist/claude, dist/codex (validates names, tools, TOML, stack.json)
-install.py    # dist/ → a project or your home folder
-src/          # edit here
+build.py      # src/ → dist/claude, dist/codex, dist/speckit-preset (validates names, tools, TOML, stack.json, preset files)
+install.py    # dist/ → a project or your home folder; --speckit adds the Spec Kit preset
+speckit_integration.py        # Spec Kit setup, preset install, Codex mirroring, constitution
+src/          # edit here (src/speckit-preset/ is the Spec Kit preset)
 dist/         # generated, committed for convenience
-.github/workflows/check.yml   # build --check, checker and installer smoke tests
+.github/workflows/check.yml   # build --check, checker, installer and Spec Kit end-to-end tests
 ```

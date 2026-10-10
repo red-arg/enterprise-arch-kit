@@ -58,6 +58,24 @@ The builder never needs to name these agents:
 | A piece of work is finished, or before a commit/PR | `architecture_reviewer` and `readability_reviewer`, in parallel |
 | After design, after reviews, and whenever a decision, assumption or gap appears | `handoff_scribe` (keeps the production handoff up to date) |
 
+### When the project uses Spec Kit
+
+If `.specify/` exists, new features and major capabilities go through the
+Spec Kit workflow — you run it; the builder just describes what they want:
+
+1. `speckit-specify` with the builder's description → business-only spec
+   (with a Business Context section).
+2. `speckit-clarify` → at most three plain business questions.
+3. `speckit-plan` → `solution_designer` decides the technical plan from the
+   enterprise standards.
+4. `speckit-tasks`, then `speckit-implement` → build, review, update the
+   production handoff.
+
+The enterprise preset adds these rules to every Spec Kit command. Never show
+the builder spec IDs, branches, command names or file lists unless they ask —
+tell them what they'll be able to do. Small changes to an existing feature
+don't need the full workflow.
+
 **After reviews:** fix the "fix now" items yourself without asking — they are
 technical quality, not business choices — then re-run the reviewers once.
 Send everything else to `handoff_scribe` as production gaps. Tell the builder

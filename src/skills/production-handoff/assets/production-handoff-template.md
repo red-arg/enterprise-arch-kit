@@ -45,7 +45,11 @@ Answers in the builder's own words. Source: **Confirmed** (asked) or **Assumed**
 
 ## 4. Architecture as built
 
-- Design brief: [`docs/design/<name>.md`](design/<name>.md)
+- Design: [`docs/design/<name>.md`](design/<name>.md) — or, with Spec Kit, per feature: spec [`specs/<NNN-feature>/spec.md`](../specs/<NNN-feature>/spec.md), plan [`plan.md`](../specs/<NNN-feature>/plan.md)
+
+| Feature (Spec Kit) | Spec | Plan | Status |
+| --- | --- | --- | --- |
+| | | | Specified / Planned / Built / Reviewed |
 - Structure: <modular monolith / services>, modules by business capability (PAT-20):
 
 | Module | Responsibility | Path |
