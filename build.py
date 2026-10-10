@@ -47,6 +47,16 @@ CODEX_SANDBOX = {"read-only", "workspace-write", "danger-full-access"}
 CODEX_EFFORT = {"minimal", "low", "medium", "high", "xhigh", "max", "ultra"}
 
 
+SKILL_LOCATION = {
+    "claude": ("Skill files: each skill's folder is `.claude/skills/<skill-name>/` in this project "
+               "(or `~/.claude/skills/<skill-name>/` if installed for the user). When a skill "
+               "mentions `references/…`, `assets/…` or `scripts/…`, read them from that folder."),
+    "codex": ("Skill files: each skill's folder is `.agents/skills/<skill-name>/` in this repository "
+              "(or `~/.agents/skills/<skill-name>/` for the user). When a skill mentions "
+              "`references/…`, `assets/…` or `scripts/…`, read them from that folder."),
+}
+
+
 class BuildError(Exception):
     pass
 
@@ -218,6 +228,8 @@ def claude_agent(spec: dict) -> str:
         fm.append("skills:")
         fm += [f"  - {s}" for s in spec["skills"]]
     body = render(spec["prompt"], "claude").rstrip() + "\n"
+    if spec.get("skills"):
+        body = (SKILL_LOCATION["claude"] + "\n\n") + body
     return "---\n" + "\n".join(fm) + "\n---\n\n<!-- " + BANNER + " -->\n\n" + body
 
 
@@ -227,7 +239,8 @@ def codex_agent(spec: dict) -> str:
     if spec.get("skills"):
         listed = ", ".join(f"`{s}`" for s in spec["skills"])
         preamble = (f"Before you start, load these skills and follow them: {listed} "
-                    f"(mention them as {', '.join('$' + s for s in spec['skills'])}).\n\n")
+                    f"(mention them as {', '.join('$' + s for s in spec['skills'])}).\n"
+                    + SKILL_LOCATION["codex"] + "\n\n")
     lines = [f"# {BANNER}",
              f"name = {toml_str(spec['name'])}",
              f"description = {toml_str(spec['description'])}"]

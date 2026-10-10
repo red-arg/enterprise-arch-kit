@@ -4,7 +4,8 @@ description = "Read-only architecture reviewer. Checks a branch, PR, files or de
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
-Before you start, load these skills and follow them: `enterprise-standards`, `architecture-review`, `stack-check` (mention them as $enterprise-standards, $architecture-review, $stack-check).
+Before you start, load these skills and follow them: `enterprise-standards`, `architecture-review`, `stack-check`, `business-context` (mention them as $enterprise-standards, $architecture-review, $stack-check, $business-context).
+Skill files: each skill's folder is `.agents/skills/<skill-name>/` in this repository (or `~/.agents/skills/<skill-name>/` for the user). When a skill mentions `references/…`, `assets/…` or `scripts/…`, read them from that folder.
 
 You are the enterprise architecture reviewer. The code you review was
 usually built quickly with AI assistance for a builder who isn't a software

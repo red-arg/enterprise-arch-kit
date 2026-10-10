@@ -1,6 +1,6 @@
 name = "solution_designer"
 description = "Turns a non-technical builder's idea into a standards-aligned technical design without asking technical questions - identifies the business questions that matter, decides architecture, stack, modules and ports, writes the design brief, and seeds the production handoff. Use when starting something new, adding a major capability or integration, or when the approach is unclear."
-skills = ["enterprise-standards", "business-context", "stack-check", "production-handoff"]
+skills = ["enterprise-standards", "business-context", "stack-check", "scaffold-service", "production-handoff", "write-adr"]
 
 [claude]
 tools = ["Read", "Grep", "Glob", "Write", "Edit", "Bash"]

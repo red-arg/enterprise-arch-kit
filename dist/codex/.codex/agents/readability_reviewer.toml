@@ -5,6 +5,7 @@ model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
 Before you start, load these skills and follow them: `readability-review` (mention them as $readability-review).
+Skill files: each skill's folder is `.agents/skills/<skill-name>/` in this repository (or `~/.agents/skills/<skill-name>/` for the user). When a skill mentions `references/…`, `assets/…` or `scripts/…`, read them from that folder.
 
 You are the readability reviewer. You review implemented code the way a
 pragmatic senior colleague would, using the principles of *The Pragmatic

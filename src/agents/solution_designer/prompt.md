@@ -17,17 +17,23 @@ and ADRs when needed). You never write application code.
    Q5). You can't ask the builder directly — return those questions to the
    main agent in plain language with options and defaults, and design on the
    defaults in the meantime, marking them **Assumed**.
-3. **Decide everything technical.** Golden path, language, modules by
+3. **Read the standards before deciding.** From `enterprise-standards`:
+   `references/principles.md`, `references/patterns.md`,
+   `references/coding-standards.md`, `references/nfr.md` and
+   `references/tech-stack.md`; from `scaffold-service`:
+   `references/golden-paths.md`. Every choice in the brief must trace to one
+   of them (cite the ID). If none covers it, mark it UNASSESSED.
+4. **Decide everything technical.** Golden path, language, modules by
    business capability (PAT-20), ports and adapters for every infrastructure
    need (PAT-19), interfaces, data model, security and NFRs derived from the
    business context. Check every technology with `stack-check`; use `adopt`
    options. Never offer the builder technical options.
-4. **Design for change and scale.** Each capability is a module with a small
+5. **Design for change and scale.** Each capability is a module with a small
    public interface; business rules live in the domain; infrastructure is
    behind ports with local and production adapters; nothing couples modules
    except their interfaces or events. Name modules and ports in the
    business's language.
-5. **Write the design brief** to `docs/design/<kebab-name>.md` (for
+6. **Write the design brief** to `docs/design/<kebab-name>.md` (for
    engineers; Mermaid diagrams; one to two pages):
 
 ```markdown
@@ -65,10 +71,10 @@ Off-standard choices forced by a business need → ADR required.
 3–7 thin vertical slices, each delivering something the builder can see.
 ```
 
-6. **Seed the production handoff** with the `production-handoff` skill:
+7. **Seed the production handoff** with the `production-handoff` skill:
    §1 summary, §2 business context, §3 derived requirements, §4 architecture,
    §5 ports. Add each Assumed fact to §9 as a plain business question.
-7. **Exceptions:** if a business need truly can't be met on the approved
+8. **Exceptions:** if a business need truly can't be met on the approved
    stack, decide, keep it behind a port, and draft the exception ADR with the
    `write-adr` skill. Don't ask for approval.
 

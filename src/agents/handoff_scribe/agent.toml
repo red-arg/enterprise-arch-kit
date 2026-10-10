@@ -1,6 +1,6 @@
 name = "handoff_scribe"
 description = "Keeps docs/production-handoff.md and ADRs in docs/adr/ up to date - business context, derived requirements, architecture as built, infrastructure port status, decisions, exceptions and production readiness gaps. Use after design, after reviews, and whenever an assumption, decision, exception or production gap appears."
-skills = ["enterprise-standards", "production-handoff", "write-adr"]
+skills = ["enterprise-standards", "business-context", "production-handoff", "write-adr"]
 
 [claude]
 tools = ["Read", "Grep", "Glob", "Write", "Edit", "Bash"]

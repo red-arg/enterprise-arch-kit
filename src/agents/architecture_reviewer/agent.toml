@@ -3,7 +3,7 @@
 #   Codex:       .codex/agents/architecture_reviewer.toml (developer_instructions = prompt)
 name = "architecture_reviewer"
 description = "Read-only architecture reviewer. Checks a branch, PR, files or design against enterprise standards and production readiness, and returns findings sorted into fix-now items for the main agent, gaps to record for production, and any business fact needed - with file:line evidence. Use after a piece of work is finished, before a commit or PR, or when asked to check alignment."
-skills = ["enterprise-standards", "architecture-review", "stack-check"]
+skills = ["enterprise-standards", "architecture-review", "stack-check", "business-context"]
 
 [claude]
 tools = ["Read", "Grep", "Glob", "Bash"]
