@@ -209,6 +209,8 @@ def load_agents(skill_names: list[str]) -> list[dict]:
             raise BuildError(f"{d}: unknown Claude tools {sorted(bad)}")
         if c.get("model") and c["model"] not in CLAUDE_MODELS and not c["model"].startswith("claude-"):
             raise BuildError(f"{d}: invalid Claude model {c['model']!r}")
+        if c.get("guard") and (c["guard"] not in GUARDS or "tdd" not in spec.get("skills", [])):
+            raise BuildError(f"{d}: guard must be one of {sorted(GUARDS)} and the agent needs the tdd skill")
         if c.get("effort") and c["effort"] not in CLAUDE_EFFORT:
             raise BuildError(f"{d}: invalid Claude effort {c['effort']!r}")
         if x.get("sandbox_mode") and x["sandbox_mode"] not in CODEX_SANDBOX:
@@ -217,6 +219,20 @@ def load_agents(skill_names: list[str]) -> list[dict]:
             raise BuildError(f"{d}: invalid Codex model_reasoning_effort")
         agents.append(spec)
     return agents
+
+
+GUARDS = {"test-writer", "implementer"}
+
+
+def guard_command(role: str) -> str:
+    """Shell command for a Claude Code PreToolUse hook running the tdd guard.
+
+    Looks for the script in the project, then the user-level install; if it
+    isn't there, exits 0 (allow) rather than blocking every tool call."""
+    return ('f="$CLAUDE_PROJECT_DIR/.claude/skills/tdd/scripts/tdd_guard.py"; '
+            '[ -f "$f" ] || f="$HOME/.claude/skills/tdd/scripts/tdd_guard.py"; '
+            '[ -f "$f" ] || exit 0; '
+            f'exec python3 "$f" hook {role}')
 
 
 def claude_agent(spec: dict) -> str:
@@ -230,6 +246,11 @@ def claude_agent(spec: dict) -> str:
     if spec.get("skills"):
         fm.append("skills:")
         fm += [f"  - {s}" for s in spec["skills"]]
+    if c.get("guard"):
+        fm += ["hooks:", "  PreToolUse:",
+               "    - matcher: \"Read|Grep|Glob|Bash|Write|Edit|MultiEdit|NotebookEdit\"",
+               "      hooks:", "        - type: command",
+               f"          command: {yaml_str(guard_command(c['guard']))}"]
     body = render(spec["prompt"], "claude").rstrip() + "\n"
     if spec.get("skills"):
         body = (SKILL_LOCATION["claude"] + "\n\n") + body

@@ -1,0 +1,15 @@
+name = "implementer"
+description = "Makes failing tests pass with the simplest code on the enterprise golden path, then refactors with the suite green - never creates, edits or deletes tests. Use for the STUB, GREEN and REFACTOR steps of the tdd skill."
+skills = ["tdd", "enterprise-standards", "stack-check", "scaffold-service"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Write", "Edit", "Bash"]
+model = "inherit"
+effort = "high"
+color = "orange"
+# Blocks creating, editing or deleting test files while this agent runs.
+guard = "implementer"
+
+[codex]
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "high"

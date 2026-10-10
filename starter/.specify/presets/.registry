@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "presets": {
     "enterprise-arch-kit": {
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source": "local",
-      "manifest_hash": "sha256:b1f59f011ff8f0557ecb9444994690f419de266583fb0cb47b7089d684e3d4be",
+      "manifest_hash": "sha256:b161dd115857322df3eeccd8541cc2e9bfb61c447f81f61f7959f235a3cc65c7",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -27,7 +27,7 @@
           "speckit-implement"
         ]
       },
-      "installed_at": "2026-10-10T07:56:16.952543+00:00"
+      "installed_at": "2026-10-10T08:53:15.492561+00:00"
     }
   }
 }

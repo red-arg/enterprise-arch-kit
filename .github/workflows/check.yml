@@ -14,6 +14,8 @@ jobs:
           python-version: "3.12"
       - name: dist/ is up to date with src/
         run: python3 build.py --check
+      - name: Test-first guard and gates
+        run: python3 -m unittest discover tests -v
       - name: Stack checker runs
         run: python3 dist/codex/.agents/skills/stack-check/scripts/check_stack.py . --json > /dev/null
       - name: Installer round-trip
@@ -43,6 +45,9 @@ jobs:
           python3 -c "import json; json.load(open('.devcontainer/devcontainer.json'))"
           grep -q "disable-model-invocation: true" .claude/skills/install/SKILL.md
           grep -q "allow_implicit_invocation: false" .agents/skills/install/agents/openai.yaml
+          grep -q "hook test-writer" .claude/agents/test_writer.md
+          grep -q "hook implementer" .claude/agents/implementer.md
+          test -f .codex/agents/test_writer.toml && test -f .codex/agents/implementer.toml
           test "$(grep -l 'Enterprise Rules' .claude/skills/speckit-*/SKILL.md | wc -l)" = 6
           test "$(grep -l 'Enterprise Rules' .agents/skills/speckit-*/SKILL.md | wc -l)" = 6
           spec=$(bash .specify/scripts/bash/create-new-feature.sh --json "CI feature" | tail -1 | python3 -c "import json,sys; print(json.load(sys.stdin)['SPEC_FILE'])")

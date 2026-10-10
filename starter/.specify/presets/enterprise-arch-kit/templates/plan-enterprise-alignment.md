@@ -34,6 +34,16 @@
 | Decision | Choice | Status (adopt/trial/…) | Standard |
 | --- | --- | --- | --- |
 
+### Acceptance Examples (test oracles)
+
+<!-- Concrete, hand-worked values per user story for test_writer. Literal
+     inputs and expected outcomes — never formulas. Include at least one
+     edge or rule-breaking case per story. -->
+
+| Story / scenario | Given (inputs) | When | Then (expected, literal) |
+| --- | --- | --- | --- |
+| US1-AS1 | [e.g. 3 days of leave remaining] | [request 5 days] | [rejected: "Not enough leave remaining (3 days)"] |
+
 ### Exceptions
 
 | Off-standard choice | Business need that forces it | Standard affected | ADR |

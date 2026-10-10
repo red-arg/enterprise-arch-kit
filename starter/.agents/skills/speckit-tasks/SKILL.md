@@ -218,14 +218,16 @@ Every task MUST strictly follow this format:
 
 ## Enterprise Rules for Tasks
 
-Apply the *Enterprise Task Rules* section of the tasks template:
+Apply the *Enterprise Task Rules* section of the tasks template. Tests are
+**mandatory and first**, regardless of any "tests are optional" wording above:
 
-- Setup from the golden path (`scaffold-service`) for a new deployable.
-- One foundational task group per port in plan.md's *Ports and Adapters*
-  table: local adapter, production adapter or fail-fast stub, config switch,
-  contract test.
+- Setup from the golden path (`scaffold-service`) for a new deployable,
+  ending with a passing smoke test.
+- Ports built test-first: contract tests by `test_writer`, then adapters by
+  `implementer`.
+- Every user story as the test-first cycle in order: `[RED] test_writer` →
+  `[STUB] implementer` → `[GATE] verify-red` → `[GREEN] implementer` →
+  `[GATE] verify-green` → `[REFACTOR] implementer` → `[REVIEW]` →
+  `[HANDOFF] handoff_scribe`.
 - Tasks grouped by module (business capability) with module-layout paths.
-- Each user story ends with parallel `architecture_reviewer` and
-  `readability_reviewer` review tasks (apply fix-now items) and a
-  `handoff_scribe` update task.
 - No task asks the builder a technical question.

@@ -61,6 +61,14 @@ Every finished slice is reviewed for standards alignment and readability.
 Fixes that need no business input are applied immediately; larger gaps are
 recorded in the handoff.
 
+### VIII. Test-first, written independently
+
+Every behaviour change starts with failing tests written by `test_writer`
+from the spec and public interfaces — never from the implementation — and is
+made to pass by `implementer`, who never changes tests. Every new test must
+fail before implementation (no vacuous or tautological tests), and tests must
+be unchanged between red and green. Tests are the executable specification.
+
 ## Enterprise Constraints
 
 - Non-negotiables `NN-01`–`NN-04` (principles.md) can't be waived by any ADR.
@@ -76,6 +84,8 @@ recorded in the handoff.
 - **Plan gate:** every technical choice in `plan.md` cites a standard ID or is
   marked UNASSESSED; every infrastructure need has a port; any violation of
   these principles is listed under Complexity Tracking with an ADR.
+- **Test gates:** `verify-red` passes before implementation starts and
+  `verify-green` passes before a story is done (`tdd` skill).
 - **Implementation gate:** one-command local run works; `stack-check --strict`
   passes; architecture and readability reviews run; handoff updated.
 
@@ -86,4 +96,4 @@ constitution. Amendments that add project rules are allowed; amendments that
 relax enterprise standards require an exception ADR approved by the
 architecture team.
 
-**Version**: 1.0.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization
+**Version**: 1.1.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization

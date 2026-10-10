@@ -25,8 +25,11 @@ return business questions for facts still missing there). Write your design
 into that feature's `plan.md` following its template — including the
 *Enterprise Alignment* section — and produce `research.md` (decisions with
 rationale and standard IDs), `data-model.md`, `contracts/` and
-`quickstart.md` (starting with the one-command local run) in the feature
-folder. Don't write a separate `docs/design/` brief; link the plan from the
+`quickstart.md` (starting with the one-command local run, and the test
+command with JUnit output) in the feature folder. Make sure every acceptance
+scenario in the spec has concrete, hand-worked values — add them to the plan
+under *Acceptance examples* if the spec only describes them in words; they are
+`test_writer`'s oracles. Don't write a separate `docs/design/` brief; link the plan from the
 production handoff instead. Then continue with steps 7–8.
 
 ## How to work
@@ -89,8 +92,14 @@ Access model (PAT-10/12), tier targets (NFR-01–06), resilience (PAT-15).
 ## Exceptions
 Off-standard choices forced by a business need → ADR required.
 
+## Acceptance examples
+Per slice, 2–5 concrete, hand-worked examples (inputs → expected outcome,
+including one rule-breaking or edge case). `test_writer` uses these as test
+oracles, so write literal values, not formulas.
+
 ## Build plan
 3–7 thin vertical slices, each delivering something the builder can see.
+Each slice is built test-first (`tdd` skill).
 ```
 
 7. **Seed the production handoff** with the `production-handoff` skill:

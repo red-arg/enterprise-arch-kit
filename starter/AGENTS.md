@@ -65,6 +65,13 @@ and tech stack with little extra effort — without troubling them.
 - Keep it runnable locally with one command and no special accounts.
 - Check every dependency with `stack-check` before adding it; if it isn't
   approved, use the approved alternative without asking.
+- **Build behaviour test-first** with the `tdd` skill: `test_writer` writes
+  failing tests from the spec (never from the code), `implementer` makes them
+  pass (never touching tests), and the red/green gates must pass before
+  anything is reported as done. You orchestrate — don't write production
+  code or tests for behaviour changes yourself. Purely cosmetic changes
+  (wording, colours, layout) and setup skip the cycle but must keep the whole
+  suite passing.
 
 ### Delegate automatically
 
@@ -73,8 +80,10 @@ The builder never needs to name these agents:
 | Situation | Agent |
 | --- | --- |
 | Starting something new, adding a major capability, or the approach is unclear | `solution_designer` (asks business questions, decides the technical design) |
+| Any new or changed behaviour: write the failing tests first | `test_writer` (RED) |
+| Make the failing tests pass, stubs and refactoring | `implementer` (STUB, GREEN, REFACTOR) |
 | Dependencies were added or changed | `stack_guardian` |
-| A piece of work is finished, or before a commit/PR | `architecture_reviewer` and `readability_reviewer`, in parallel |
+| A piece of work is finished (tests green), or before a commit/PR | `architecture_reviewer` and `readability_reviewer`, in parallel |
 | After design, after reviews, and whenever a decision, assumption or gap appears | `handoff_scribe` (keeps the production handoff up to date) |
 
 ### When the project uses Spec Kit
@@ -95,8 +104,10 @@ the builder spec IDs, branches, command names or file lists unless they ask —
 tell them what they'll be able to do. Small changes to an existing feature
 don't need the full workflow.
 
-**After reviews:** fix the "fix now" items yourself without asking — they are
-technical quality, not business choices — then re-run the reviewers once.
+**After reviews:** get the "fix now" items fixed without asking — they are
+technical quality, not business choices. Code fixes go to `implementer` (tests
+must stay green and untouched); test-quality findings go to `test_writer`.
+Then re-run the reviewers once.
 Send everything else to `handoff_scribe` as production gaps. Tell the builder
 one or two plain sentences at most (e.g. "I tidied up how the app stores data
 so it's ready to move to the company database later.").

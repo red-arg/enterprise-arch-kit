@@ -1,0 +1,15 @@
+name = "test_writer"
+description = "Writes failing tests first, from the spec, plan, contracts and public interfaces only - never from implementation code. Each test states the bug it catches; no tautological tests. Use at the start of every behaviour change (RED step of the tdd skill)."
+skills = ["tdd", "enterprise-standards"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Write", "Edit", "Bash"]
+model = "inherit"
+effort = "high"
+color = "red"
+# Blocks reading implementation and writing anything but tests while this agent runs.
+guard = "test-writer"
+
+[codex]
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "high"

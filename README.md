@@ -27,6 +27,40 @@ requirements, architecture as built, the status of every swappable
 infrastructure piece, decisions and exceptions, and the remaining gaps with
 owner and effort.
 
+## Test-first, with independent test and code authors
+
+Every behaviour change is built test-first by two separate agents so tests
+describe what the business needs, not how the code happens to work:
+
+1. **RED — `test_writer`** writes failing tests from the spec's acceptance
+   scenarios, the plan's hand-worked acceptance examples, contracts and public
+   interfaces. It never sees implementation code.
+2. **STUB — `implementer`** adds public signatures that throw "not implemented".
+3. **verify-red gate** — every *new* test must fail, and for the right
+   reason. A new test that passes against a stub is vacuous or tautological
+   and goes back to `test_writer`.
+4. **GREEN — `implementer`** writes the simplest code that passes; it can't
+   change tests.
+5. **verify-green gate** — whole suite passes **and** no test file changed
+   since the red commit (a git check, so it works in both tools).
+6. **REFACTOR**, then the architecture and readability reviews.
+
+Tautologies are banned by explicit rules (no asserting mocks, no same-logic
+oracles, no echo/getter tests, no `toBeDefined`-only or catch-all assertions,
+no interaction-only checks; every test carries a `Catches:` note naming a
+plausible bug) and caught mechanically by the verify-red gate and the
+readability review.
+
+| Rule | Claude Code | Codex |
+| --- | --- | --- |
+| `test_writer` can't read implementation or write non-tests | PreToolUse hook (per agent) | Instructions |
+| `implementer` can't create, edit or delete tests | PreToolUse hook (per agent) | Instructions + verify-green git check |
+| Tests unchanged during green | verify-green | verify-green |
+| No vacuous tests | verify-red | verify-red |
+
+Purely cosmetic changes and scaffolding skip the cycle but must keep the
+suite green. The builder never sees any of this.
+
 ## How the code stays easy to productionize, change and scale
 
 - **Golden path from day one** — approved language and framework, so nothing
@@ -53,6 +87,7 @@ owner and effort.
 | `scaffold-service` | Starts new apps/APIs/workers/jobs on a golden path with modules, local + production adapters, one-command local run, CI and the handoff. |
 | `stack-check` | Decides whether a technology is allowed, plus a stdlib-only script auditing package.json, requirements, pyproject, go.mod, pom.xml, Gradle and .csproj — new vs existing usage, and `local`-only packages. |
 | `architecture-review` | Standards and productionizability review, sorted into *fix now* (main agent), *record for production* (handoff), *business fact needed* and *exceptions*. |
+| `tdd` | Test-first cycle: RED (`test_writer`) → STUB → verify-red gate → GREEN (`implementer`) → verify-green gate → REFACTOR. Test rules ban tautological tests; `tdd_guard.py` provides the gates and Claude Code hooks. |
 | `readability-review` | *The Pragmatic Programmer* review (`RD-01`–`RD-16`: ETC, DRY, orthogonality, naming, crash early…), sorted into *fix now* and *record*. |
 | `install` | One-time, explicit-only setup for the builder (`/install` / `$install`): workspace checks, automatic saving, project owner, handoff started, plain-language "you're ready". |
 | `write-adr` | ADRs for decisions and exceptions made by the agents on the builder's behalf, awaiting architecture approval. |
@@ -64,6 +99,8 @@ owner and effort.
 | `solution_designer` | Identifies the business questions that matter, decides the technical design, writes the design brief and seeds the handoff. | Writes `docs/` only |
 | `stack_guardian` | Dependency audit; tells the main agent what to swap. | Read-only, cheap model |
 | `architecture_reviewer` | Standards and production-readiness review. | Read-only, high effort |
+| `test_writer` | Writes failing tests from the spec, contracts and public interfaces — never from implementation code; each test names the bug it catches; no tautologies. | Writes tests only; Claude Code hook blocks reading implementation |
+| `implementer` | Creates stubs, makes failing tests pass on the golden path, refactors with the suite green; never touches tests. | Writes code; Claude Code hook blocks editing tests |
 | `readability_reviewer` | Pragmatic Programmer readability review. | Read-only |
 | `handoff_scribe` | Keeps `docs/production-handoff.md` and `docs/adr/` current. | Writes `docs/` only |
 

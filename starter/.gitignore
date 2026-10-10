@@ -8,6 +8,9 @@
 # Local data from the zero-setup adapters
 .data/
 
+# Test-first cycle results (tdd skill)
+.tdd/
+
 # Dependencies and build output
 node_modules/
 dist/
