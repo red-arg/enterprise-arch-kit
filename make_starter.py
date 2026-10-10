@@ -15,8 +15,8 @@ Requires the Spec Kit CLI (`specify`); run `python3 build.py` first.
 """
 from __future__ import annotations
 
+import json
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -55,13 +55,28 @@ def generate(dest: Path) -> None:
         shutil.copytree(work, dest, symlinks=True)
 
 
-TIMESTAMP_RE = re.compile(r'"(installed_at|updated_at)":\s*"[^"]*"')
+VOLATILE_KEYS = {"installed_at", "updated_at"}
+
+
+def _strip_volatile(value):
+    if isinstance(value, dict):
+        return {k: _strip_volatile(v) for k, v in value.items() if k not in VOLATILE_KEYS}
+    if isinstance(value, list):
+        return [_strip_volatile(v) for v in value]
+    return value
 
 
 def _normalized(path: Path) -> bytes:
+    """File content for comparison. Spec Kit's JSON state files carry install
+    timestamps and list files in filesystem order, which differs between
+    machines, so JSON is compared as data with sorted keys and no timestamps."""
     data = path.read_bytes()
     if path.suffix == ".json" or path.name == ".registry":
-        data = TIMESTAMP_RE.sub(r'"\1": "<ts>"', data.decode("utf-8")).encode("utf-8")
+        try:
+            parsed = json.loads(data.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return data
+        return json.dumps(_strip_volatile(parsed), sort_keys=True, indent=1).encode("utf-8")
     return data
 
 
