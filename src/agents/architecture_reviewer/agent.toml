@@ -1,0 +1,16 @@
+# Canonical definition. build.py turns this into:
+#   Claude Code: .claude/agents/architecture_reviewer.md  (YAML frontmatter + prompt)
+#   Codex:       .codex/agents/architecture_reviewer.toml (developer_instructions = prompt)
+name = "architecture_reviewer"
+description = "Read-only architecture reviewer. Checks a branch, PR, files or design against enterprise standards and returns aligned items, deviations needing ADRs and recommendations with file:line evidence. Use after building a feature, before merging, or when asked to check alignment."
+skills = ["enterprise-standards", "architecture-review", "stack-check"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Bash"]
+model = "inherit"
+effort = "high"
+color = "blue"
+
+[codex]
+sandbox_mode = "read-only"
+model_reasoning_effort = "high"

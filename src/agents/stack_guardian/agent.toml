@@ -1,0 +1,13 @@
+name = "stack_guardian"
+description = "Fast dependency and tech-stack auditor. Classifies a repo's or change's dependencies as adopt/trial/hold/retire/unassessed and proposes approved alternatives. Use after dependencies are added or changed, or when asked whether a library or technology is allowed."
+skills = ["enterprise-standards", "stack-check"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Bash"]
+model = "haiku"
+effort = "low"
+color = "yellow"
+
+[codex]
+sandbox_mode = "read-only"
+model_reasoning_effort = "low"

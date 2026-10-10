@@ -1,0 +1,13 @@
+name = "solution_designer"
+description = "Turns a feature or app idea into a short, standards-aligned design brief (components, approved tech, integration, data, security, NFRs, ADRs needed) before code is written. Use when starting something new, adding a service, data store or integration, or when the approach is unclear."
+skills = ["enterprise-standards", "stack-check", "write-adr"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Write", "Bash"]
+model = "inherit"
+effort = "high"
+color = "green"
+
+[codex]
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "high"

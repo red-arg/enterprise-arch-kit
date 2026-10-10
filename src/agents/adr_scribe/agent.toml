@@ -1,0 +1,13 @@
+name = "adr_scribe"
+description = "Writes Architecture Decision Records in docs/adr/ from the current conversation, a design brief or a review finding, including exception ADRs for deviations from enterprise standards. Use when a decision or deviation needs to be recorded."
+skills = ["enterprise-standards", "write-adr"]
+
+[claude]
+tools = ["Read", "Grep", "Glob", "Write", "Edit", "Bash"]
+model = "inherit"
+effort = "medium"
+color = "purple"
+
+[codex]
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "medium"
