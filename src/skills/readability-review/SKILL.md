@@ -6,8 +6,10 @@ description: Review implemented code for readability and ease of change using Th
 # Readability review
 
 Review code the way a pragmatic senior colleague would: find the few things
-that make it harder to read or change, explain why in a sentence, and show a
-small, concrete improvement. The principles and their IDs (`RD-01`–`RD-16`)
+that make it harder to read or change, explain why in a sentence, and give a
+small, concrete improvement. The report is for the **main agent**, which
+applies the fixes itself — the builder is not a software engineer and is
+never asked to make code-quality decisions. The principles and their IDs (`RD-01`–`RD-16`)
 are in `references/pragmatic-principles.md` — read it before reviewing.
 
 {{#claude}}
@@ -25,7 +27,7 @@ the reading stays off the main thread, wait for it, then relay its report.
 - Default: the current branch vs its base — `git diff <base>...HEAD`
   (try `origin/main`, then `main`, then `master`); if nothing is committed
   yet, `git diff HEAD` for working-tree changes.
-- If the developer named files or a folder, review those instead.
+- If specific files or a folder were named, review those instead.
 - Review the changed code and its immediate surroundings. Note broken
   windows *next to* the change (RD-16), but don't audit the whole repo.
 - Gauge the bar: prototype or production? Tier and lifespan from the README
@@ -52,39 +54,46 @@ repeats. Omit empty sections.
 ````markdown
 ## Readability review — <scope>
 
-**Verdict:** <Clear and easy to change | Readable with a few fixes | Hard to change — refactor before building on it>
-<one sentence: the single most valuable improvement>
+**Verdict:** <Clear and easy to change | Readable after small fixes | Hard to change — refactor before building more>
 
-### Worth fixing now
+### Fix now (main agent applies, smallest safe steps, tests green between each)
 1. **RD-01 DRY — discount rule in three places** `cart.ts:41`, `invoice.ts:88`, `email.ts:12`
    Changing the discount means finding all three; they've already drifted (`>=` vs `>`).
-   **Suggest:** one `discountFor(order)` in `pricing/` and call it from each.
+   **Do:** one `discountFor(order)` in the pricing module; call it from each.
    ```ts
    // before
    if (order.total >= 100) price *= 0.9
    // after
    price = applyDiscount(order, price)
    ```
+2. **RD-06 Naming** `utils.py:15` `process(d)` → `normalize_address(raw_address)`.
 
-### Consider
-- **RD-06 Naming** `utils.py:15` `process(d)` → `normalize_address(raw_address)` — says what and on what.
+### Record for production (larger refactors → handoff §8)
+| Gap | Principle | Where | Effort |
+| --- | --- | --- | --- |
 
 ### Broken windows nearby
 - Commented-out block `api/handler.go:120–140`; unowned TODO `jobs/sync.py:9`.
 
 ### Done well
 - <one to three specific things worth keeping, with RD IDs>
+
+### Builder summary
+<one plain sentence the main agent can relay, or "nothing to tell the builder">
 ````
 
 Rules for findings:
 - Cite `file:line` and the RD ID with its short name.
 - One or two sentences of *why*, framed as ease of change or understanding.
-- A concrete suggestion; include a short before/after snippet only when it
-  makes the fix obvious (≤ 8 lines).
-- Order by value to the reader of this code, not by rule number.
+- A concrete instruction the main agent can apply without asking anyone;
+  include a short before/after snippet only when it makes the fix obvious
+  (≤ 8 lines).
+- **Fix now** = changes that are safe in one sitting with tests. Anything
+  bigger (restructuring several modules) goes to **Record for production**.
+- Order by value to the next person changing this code.
 
-## 5. Next steps
+## 5. After the review
 
-Offer at most two: apply the "worth fixing now" items (in small steps, with
-tests passing between each), or re-review after changes. Don't edit code
-unless the developer asks.
+The main agent applies the "fix now" items, runs the tests, and re-runs the
+review once. Record items go to `handoff_scribe`. Don't edit code yourself in
+this skill.

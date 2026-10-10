@@ -1,13 +1,45 @@
 # Enterprise Architecture Kit for Claude Code and Codex
 
-Subagents and skills that help developers who build fast with AI ("vibe
-coders") stay aligned with your enterprise architecture, standards and tech
-stack — **without** blocking them. One shared source generates native files
-for both **Claude Code** and **OpenAI Codex**.
+Subagents and skills that let people who aren't software engineers ("vibe
+coders") build what they need with AI — while the agents quietly make sure
+the result can be taken to production on your enterprise standards,
+architecture and tech stack with little extra effort.
+
+One shared source generates native files for both **Claude Code** and
+**OpenAI Codex**.
 
 > **Status:** the standards under `src/skills/enterprise-standards/references/`
 > are illustrative placeholders marked `TODO`. Replace them with your real
 > standards before rolling out.
+
+## The idea
+
+| The builder… | The agents… |
+| --- | --- |
+| Describes what they want and who it's for | Decide every technical detail on the approved stack and golden path |
+| Answers a few plain **business** questions ("Who will use it?", "What information does it handle?", "What if it stopped for a day?") | Translate the answers into technical requirements: tier, data classification, access model, scale, integrations, compliance |
+| Is never asked to choose a technology or weigh a technical trade-off | Fix code-quality and alignment issues themselves; record everything else for engineers |
+| Gets something that runs on their laptop with one command | Structure it so moving to production is mostly configuration, not a rewrite |
+
+Everything an engineering team needs to productionize lives in one living
+document, **`docs/production-handoff.md`**: business context, derived
+requirements, architecture as built, the status of every swappable
+infrastructure piece, decisions and exceptions, and the remaining gaps with
+owner and effort.
+
+## How the code stays easy to productionize, change and scale
+
+- **Golden path from day one** — approved language and framework, so nothing
+  needs rewriting later.
+- **Modules by business capability** (PAT-20) — `leave-requests`,
+  `approvals`, not `controllers/` and `models/`. New capability = new module;
+  any module can later become its own service.
+- **Swappable infrastructure** (PAT-19) — the database, login, secrets,
+  messaging, file storage, notifications and every external system sit
+  behind interfaces with a **local adapter** (zero setup: embedded database,
+  dev login, fake external systems with sample data) and a **production
+  adapter** on the enterprise stack. Switching is configuration only, proven
+  by shared contract tests.
 
 ## What's inside
 
@@ -15,54 +47,71 @@ for both **Claude Code** and **OpenAI Codex**.
 
 | Skill | What it does |
 | --- | --- |
-| `enterprise-standards` | The source of truth: principles (`AP-*`, `NN-*`), patterns (`PAT-*`), coding standards (`CS-*`), NFRs (`NFR-*`) and the tech radar (`STK-*`, `stack.json`). Every rule has a stable ID. |
-| `stack-check` | "Can I use X?" answers and a stdlib-only script that audits package.json, requirements, pyproject, go.mod, pom.xml, Gradle and .csproj against the radar — and tells new usage from existing. |
-| `scaffold-service` | Starts new APIs, frontends, workers and jobs on a golden path with auth, config, logging, OTel, CI, Dockerfile and ADRs wired in. |
-| `architecture-review` | Checklist and report format: verdict, must-fix, deviations (fix or ADR), unassessed, recommendations — each with `file:line` and a standard ID. |
-| `write-adr` | Numbered ADRs in `docs/adr/`, including *exception* ADRs with standards affected, expiry and exit plan. |
-| `readability-review` | Readability and ease-of-change review using *The Pragmatic Programmer* principles (`RD-01`–`RD-16`: ETC, DRY, orthogonality, tell-don't-ask, naming, crash early…), capped at the 7 most valuable findings with before/after suggestions. |
+| `enterprise-standards` | Source of truth: principles (`AP-*`, `NN-*`), patterns (`PAT-*`), coding standards (`CS-*`), NFRs (`NFR-*`) and the tech radar (`STK-*`, `stack.json`). Includes the "decide, don't ask" rules. |
+| `business-context` | Plain-language business question bank (Q1–Q8) with defaults, and how each answer maps to technical requirements. |
+| `production-handoff` | Template and rules for the living production handoff document. |
+| `scaffold-service` | Starts new apps/APIs/workers/jobs on a golden path with modules, local + production adapters, one-command local run, CI and the handoff. |
+| `stack-check` | Decides whether a technology is allowed, plus a stdlib-only script auditing package.json, requirements, pyproject, go.mod, pom.xml, Gradle and .csproj — new vs existing usage, and `local`-only packages. |
+| `architecture-review` | Standards and productionizability review, sorted into *fix now* (main agent), *record for production* (handoff), *business fact needed* and *exceptions*. |
+| `readability-review` | *The Pragmatic Programmer* review (`RD-01`–`RD-16`: ETC, DRY, orthogonality, naming, crash early…), sorted into *fix now* and *record*. |
+| `write-adr` | ADRs for decisions and exceptions made by the agents on the builder's behalf, awaiting architecture approval. |
 
 ### Subagents
 
 | Agent | Role | Access |
 | --- | --- | --- |
-| `solution_designer` | Turns an idea into a one-to-two-page design brief in `docs/design/` on the approved stack, before code. | Writes docs only |
-| `stack_guardian` | Fast dependency audit with approved alternatives. | Read-only, cheap model |
-| `architecture_reviewer` | Reviews a branch/PR/design against the standards. | Read-only, high effort |
-| `adr_scribe` | Records decisions and exceptions as ADRs. | Writes `docs/adr/` |
-| `readability_reviewer` | Reviews implemented code for readability and ease of change (Pragmatic Programmer). Runs alongside `architecture_reviewer` when a feature is done. | Read-only |
+| `solution_designer` | Identifies the business questions that matter, decides the technical design, writes the design brief and seeds the handoff. | Writes `docs/` only |
+| `stack_guardian` | Dependency audit; tells the main agent what to swap. | Read-only, cheap model |
+| `architecture_reviewer` | Standards and production-readiness review. | Read-only, high effort |
+| `readability_reviewer` | Pragmatic Programmer readability review. | Read-only |
+| `handoff_scribe` | Keeps `docs/production-handoff.md` and `docs/adr/` current. | Writes `docs/` only |
 
 ### Project instructions
 
-A short block added to `AGENTS.md` (and imported from `CLAUDE.md`) tells the
-main agent to default to the standards, follow **guide, don't block**, and
-delegate to the agents above automatically — which matters for Codex, since
-it only spawns subagents when asked or when `AGENTS.md` says to.
+A block added to `AGENTS.md` (and imported from `CLAUDE.md`) sets the
+ground rules for the main agent: who decides what, business questions only,
+plain-language communication, automatic delegation, fixing review findings
+without asking, and keeping the handoff current. This matters for Codex in
+particular, which only spawns subagents when asked or when `AGENTS.md` says to.
 
-## How "guide, don't block" works
+## The flow
 
-1. Default to `adopt` technologies and golden paths; cite the standard in one line.
-2. Off-standard request → explain why the standard exists, offer the compliant option.
-3. Developer still wants it → proceed and offer an **exception ADR**.
-4. Non-negotiables (`NN-*`: secrets in code, prod data in non-prod,
-   unauthenticated external endpoints, unapproved registries) → explain and stop.
+1. **Builder:** "Build me a leave request app for my team."
+2. **`solution_designer`** returns up to three business questions (e.g. "What
+   information will it handle?") and designs on sensible defaults meanwhile.
+   The main agent asks them in plain language.
+3. **Main agent** scaffolds on the golden path (`scaffold-service`) and builds
+   in thin slices the builder can see, checking every dependency.
+4. **`stack_guardian`** runs when dependencies change.
+5. **`architecture_reviewer` + `readability_reviewer`** run in parallel when a
+   piece of work is done. The main agent applies the *fix now* items itself
+   and re-runs them once.
+6. **`handoff_scribe`** records business context, decisions, exceptions and
+   remaining gaps in the production handoff.
+7. **Builder** hears one or two plain sentences, e.g. "It now remembers
+   requests and is ready to move to the company database later."
+
+When the builder asks "can this go live?", the agents confirm the assumed
+business facts with plain questions and hand the engineering team the
+handoff, with a readiness verdict.
 
 ## Quick start
 
 Requires Python 3.11+ (standard library only).
 
 ```bash
-git clone <this repo> && cd enterprise-arch-kit
+git clone https://github.com/red-arg/enterprise-arch-kit && cd enterprise-arch-kit
 
 # 1. Make the standards yours
-#    edit src/skills/enterprise-standards/references/*.md and stack.json
+#    edit src/skills/enterprise-standards/references/*.md and stack.json,
+#    and src/skills/business-context/references/question-bank.md
 
 # 2. Generate both packages
 python3 build.py
 
 # 3. Install into a project (both tools)…
 python3 install.py /path/to/project
-#    …or one tool, or for every project on your machine
+#    …or one tool, or for every project on this machine
 python3 install.py /path/to/project --claude
 python3 install.py /path/to/project --codex
 python3 install.py --user
@@ -72,33 +121,20 @@ python3 install.py /path/to/project --uninstall
 ```
 
 The installer only touches the kit's own agents/skills and a marked block in
-`AGENTS.md`/`CLAUDE.md`; your other files and content are kept. Re-run it to
-update. Commit the installed files so the whole team gets them.
+`AGENTS.md`/`CLAUDE.md`; everything else is kept. Re-run it to update.
+For vibe coders, the simplest rollout is `--user` on their machines, or a
+starter repo with the kit pre-installed.
 
 ## Where things land
 
 | | Claude Code | Codex |
 | --- | --- | --- |
-| Subagents | `.claude/agents/<name>.md` (YAML frontmatter + prompt) | `.codex/agents/<name>.toml` (`developer_instructions`) |
+| Subagents | `.claude/agents/<name>.md` | `.codex/agents/<name>.toml` |
 | Skills | `.claude/skills/<name>/SKILL.md` | `.agents/skills/<name>/SKILL.md` |
 | Instructions | `CLAUDE.md` → `@AGENTS.md` | `AGENTS.md` |
 | User scope (`--user`) | `~/.claude/…` | `~/.codex/agents`, `~/.agents/skills`, `~/.codex/AGENTS.md` |
 
-## Using it
-
-Most of the time developers don't need to do anything — the instructions
-trigger the right agent. To call things directly:
-
-| Goal | Claude Code | Codex |
-| --- | --- | --- |
-| Design before building | "Use the solution_designer agent to design a leave-request app" | "Spawn solution_designer to design a leave-request app" |
-| Start a project | `/scaffold-service` | `$scaffold-service` |
-| Can I use X? | `/stack-check can I use MongoDB?` | `$stack-check can I use MongoDB?` |
-| Review my branch | `@"architecture_reviewer (agent)" review this branch` | "Spawn architecture_reviewer to review this branch vs main" |
-| Readability review | `@"readability_reviewer (agent)" review my changes` or `/readability-review` | "Spawn readability_reviewer to review my changes" or `$readability-review` |
-| Record an exception | "Have adr_scribe record an exception for using Flask" | "Spawn adr_scribe to record an exception for using Flask" |
-
-CI example (fails on retired or newly-added hold dependencies):
+CI for generated projects (fails on retired or newly added hold dependencies):
 
 ```bash
 python3 .agents/skills/stack-check/scripts/check_stack.py . --since origin/main --strict
@@ -110,13 +146,11 @@ All authoring happens in `src/`; `dist/` is generated (CI fails if it's stale).
 
 ```
 src/
-  instructions/AGENTS.md            # project instructions block
+  instructions/AGENTS.md            # ground rules for the main agent
   skills/<name>/SKILL.md            # Agent Skills standard; may use {{#claude}}…{{/claude}} / {{#codex}}…{{/codex}}
   agents/<name>/agent.toml          # name, description, skills + [claude] and [codex] settings
   agents/<name>/prompt.md           # the agent's instructions (same platform blocks)
 ```
-
-`agent.toml` maps to each tool like this:
 
 | `agent.toml` | Claude Code | Codex |
 | --- | --- | --- |
@@ -125,20 +159,15 @@ src/
 | `[claude] tools` | `tools:` allowlist | — (use `sandbox_mode`) |
 | `[claude] model`, `effort`, `color` | same fields | — |
 | `[codex] sandbox_mode`, `model_reasoning_effort`, `model` | — | same keys |
-| `prompt.md` | Markdown body (system prompt) | `developer_instructions` |
+| `prompt.md` | Markdown body | `developer_instructions` |
 
 Tips:
 
-- **Keep IDs stable** once published; ADRs and code comments reference them.
-- **Start with your golden paths.** If you have starter repos, point
-  `scaffold-service/references/golden-paths.md` at them and tell the skill to
-  clone instead of generate.
-- **Have real templates?** Swap illustrative defaults in `stack.json` for your
-  radar; `tech-stack.md` is regenerated from it.
-- Agent names use `snake_case` so the same names work in both tools and the
-  shared `AGENTS.md` can refer to them.
-- Codex models aren't pinned (agents inherit the parent model); set `model`
-  under `[codex]` if you want e.g. a faster model for `stack_guardian`.
+- **Tune the business questions** in `business-context/references/question-bank.md`
+  to your tiers, classification labels, regulators and systems of record.
+- **Point golden paths at real starter repos** if you have them.
+- **Keep standard IDs stable** once published; ADRs and handoffs cite them.
+- Agent names use `snake_case` so the same names work in both tools.
 
 ## Repository layout
 
@@ -147,5 +176,5 @@ build.py      # src/ → dist/claude, dist/codex (validates names, tools, TOML, 
 install.py    # dist/ → a project or your home folder
 src/          # edit here
 dist/         # generated, committed for convenience
-.github/workflows/check.yml   # build --check + checker smoke test
+.github/workflows/check.yml   # build --check, checker and installer smoke tests
 ```

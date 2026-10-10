@@ -1,6 +1,6 @@
 ---
 name: enterprise-standards
-description: Enterprise architecture standards, approved tech stack, integration patterns and coding standards. Use whenever choosing a language, framework, library, database, cloud service or pattern, designing a component or API, or answering "are we allowed to use X?".
+description: Enterprise architecture standards, approved tech stack, integration patterns and coding standards. Use whenever choosing a language, framework, library, database, cloud service or pattern, designing a component or API, or deciding whether something is allowed.
 ---
 
 # Enterprise standards
@@ -13,40 +13,52 @@ need — don't load all of them for a narrow question.
 | --- | --- |
 | Guiding principles and non-negotiables | `references/principles.md` |
 | Which languages, frameworks, libraries, databases and platforms are approved | `references/tech-stack.md` (generated from `references/stack.json`) |
-| How services talk to each other, own data, authenticate, log and deploy | `references/patterns.md` |
+| How code is structured, integrates, authenticates, logs and deploys | `references/patterns.md` |
 | Repo layout, testing, linting, naming, error handling, dependencies | `references/coding-standards.md` |
 | Default non-functional requirements (availability, security, data) | `references/nfr.md` |
 
 ## Standard IDs
 
 Every rule has a stable ID (`AP-03`, `PAT-07`, `CS-02`, `NFR-04`, `STK-…`).
-Always cite the ID when you point at a rule, so the developer can look it up
-and so an ADR can name exactly which standard it is an exception to.
+Cite IDs in technical documents (design briefs, ADRs, the production
+handoff, review reports) so engineers can trace every decision. Don't use
+them in messages to the builder.
 
 ## Tech radar statuses
 
 | Status | Meaning | What you do |
 | --- | --- | --- |
-| **adopt** | Default choice. | Use it without asking. |
-| **trial** | Allowed for new work with a named owner. | Use it, and note it in the design or PR. |
-| **hold** | Don't start new usage. Existing usage may continue. | Pick an `adopt` alternative. Using it in new code is a deviation that needs an ADR. |
-| **retire** | Being removed. | Never add. Flag existing usage for migration. |
-| *(not listed)* | Unassessed. | Prefer an `adopt` alternative. If none fits, flag it as UNASSESSED and suggest an ADR so the architecture team can rule on it. |
+| **adopt** | Default choice. | Use it. |
+| **trial** | Allowed for new work. | Use it only if no `adopt` option fits; record it in the production handoff (needs an engineering owner). |
+| **hold** | No new usage. | Use the `adopt` alternative instead. |
+| **retire** | Being removed. | Never add. Record existing usage as a production gap. |
+| *(not listed)* | Unassessed. | Use the closest `adopt` option. If nothing approved can meet the business need, use it behind a swappable boundary (PAT-19) and record an exception ADR. |
 
-## How to apply the standards (guide, don't block)
+## How to apply the standards — decide, don't ask
 
-1. **Default to the standard.** When the developer hasn't specified something,
-   choose the `adopt` option and say which standard you followed in one line.
-2. **When the developer asks for something off-standard, don't silently comply
-   and don't refuse.** Explain the standard and why it exists in a sentence or
-   two, offer the compliant alternative, and let them choose.
-3. **If they still want the deviation, it needs an ADR.** Proceed only after
-   offering to write one with the `write-adr` skill (status `Proposed`,
-   type `Exception`, citing the standard ID). Mark the code with a comment
-   pointing at the ADR, e.g. `// ADR-0007: exception to PAT-04`.
-4. **Never invent standards.** If the references don't cover something, say so,
-   make a reasonable choice consistent with the principles, and mark it
-   UNASSESSED.
+The people building with this kit care about business outcomes, not
+technology. You own every technical decision.
+
+1. **Default to the standard, silently.** Pick the `adopt` option and the
+   golden-path pattern. Record the choice in technical docs, not in chat.
+2. **Never present technical options to the builder.** If a choice depends
+   on something you don't know, ask the *business* question behind it (see
+   the `business-context` skill) and derive the technical answer yourself.
+3. **Off-standard request from the builder** (e.g. "use MongoDB", "put it on
+   Vercel"): treat it as a wish for an outcome. Deliver the outcome on the
+   approved stack and tell them in one plain sentence ("I've used the
+   company's standard database — it does everything you need and makes going
+   live easier."). If they insist, keep the approved option underneath and
+   note their preference in the production handoff for the engineering team.
+4. **Genuine business need that only an off-standard option can meet:**
+   decide, isolate it behind a port/adapter (PAT-19) so it can be swapped
+   later, write an exception ADR (`write-adr`) and add it to the handoff.
+   Don't ask the builder to approve it.
+5. **Non-negotiables (`NN-*`) are never bypassed.** Explain the business
+   risk plainly and offer the safe route to the same outcome.
+6. **Never invent standards.** If the references don't cover something,
+   choose consistently with the principles and mark it UNASSESSED in the
+   handoff for the architecture team to confirm.
 
 ## Keeping this current
 

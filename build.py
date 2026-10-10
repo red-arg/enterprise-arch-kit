@@ -101,7 +101,8 @@ def tech_stack_markdown(stack: dict) -> str:
         "> TODO(architecture-team): illustrative defaults. Edit `stack.json`, not this file.",
         "",
         "Statuses: **adopt** (default) · **trial** (allowed, needs owner) · "
-        "**hold** (no new usage) · **retire** (remove) · unlisted = unassessed.",
+        "**hold** (no new usage) · **retire** (remove) · **local** (local adapters and tests only, PAT-19) · "
+        "unlisted = unassessed.",
         "",
         "## Technologies",
         "",
@@ -116,7 +117,7 @@ def tech_stack_markdown(stack: dict) -> str:
         if not any(statuses.values()):
             continue
         lines += [f"### {eco}", ""]
-        for status in ("adopt", "trial", "hold", "retire"):
+        for status in ("adopt", "trial", "local", "hold", "retire"):
             names = statuses.get(status, [])
             if names:
                 lines.append(f"- **{status}:** " + ", ".join(f"`{n}`" for n in names))
@@ -125,7 +126,7 @@ def tech_stack_markdown(stack: dict) -> str:
 
 
 def validate_stack(stack: dict) -> None:
-    valid = {"adopt", "trial", "hold", "retire"}
+    valid = {"adopt", "trial", "hold", "retire", "local"}
     ids = set()
     for t in stack["technologies"]:
         if t["status"] not in valid:

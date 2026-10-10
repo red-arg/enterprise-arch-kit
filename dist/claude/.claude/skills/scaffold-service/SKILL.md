@@ -1,72 +1,66 @@
 ---
 name: scaffold-service
-description: Start a new service, API, web app, worker or job on the enterprise golden path with the approved stack and required cross-cutting concerns already wired in. Use when someone says "build me an app/API/service/tool", "start a new project", "set up a repo", or begins a feature that needs a new deployable.
+description: Start a new app, API, worker or job on the enterprise golden path - approved stack, modules by business capability, swappable local/production infrastructure, and a production handoff - so it runs locally with one command and can be productionized with little effort. Use when someone says "build me an app/tool/API", "start a new project", or begins work that needs a new deployable.
 ---
 
 # Scaffold on the golden path
 
-Vibe-coded projects drift most in the first hour: framework, folder layout,
-auth, config and logging get picked ad hoc and never revisited. This skill
-makes the first hour land on the enterprise golden path instead.
+The builder wants something working, fast. Engineers later want something
+they can take to production without a rewrite. This skill gives both: it
+runs locally with one command and no accounts, and it's already shaped like
+an enterprise service.
 
-## 1. Decide what's being built (ask at most two questions)
+## 1. Understand the business, not the technology
 
-Infer from the request where you can. Only ask what you can't infer:
+- Infer what's being built from the request. If the core facts are unknown,
+  ask the business questions from the `business-context` skill — usually only
+  **Q1 (who uses it)** and **Q3 (what information)**, plus **Q5** if the
+  request mentions other systems or data.
+- **Never** ask about language, framework, database, hosting or structure.
+- For anything beyond one small app (several deployables, integrations with
+  other systems, sensitive data), have `solution_designer` produce the design
+  first.
 
-1. **Shape** — REST/HTTP API · web frontend · event consumer/worker ·
-   scheduled/batch job · full-stack (frontend + API).
-2. **Language** — only if the team has a preference; otherwise use the
-   golden-path default for the shape.
+## 2. Decide the path yourself
 
-Also note, without asking unless it matters now: who uses it (internal /
-external), the data it holds (classification, NFR-04), and the service tier
-(NFR-01–03; default Tier 3 for prototypes).
+Read `references/golden-paths.md` and choose the path, language and ports
+from the business context using its tables. Don't confirm technical choices
+with the builder. Tell them only what they'll get, in plain words, e.g.
+"I'll set up a web app your team can sign into, with a place to store
+requests. It'll run on your laptop with one command."
 
-For anything beyond a single small service — several services, new data
-stores, external integrations — produce a short design first (the
-`solution_designer` agent does this) before generating code.
-
-## 2. Pick the golden path
-
-Read `references/golden-paths.md` and choose the matching path. Confirm the
-choices with the developer in one short block before writing files:
-
-```
-Golden path: REST API · TypeScript · NestJS (STK-02, STK-11)
-Data: PostgreSQL (STK-30) via Prisma (trial — owner needed)  ← flagged
-Auth: OIDC via corporate IdP (PAT-10) · Tier 3 · Internal data
-```
-
-If they ask for something off-path (e.g. Flask, MySQL), follow the
-"guide, don't block" rule in `enterprise-standards`: explain, offer the
-standard option, and if they insist, proceed and offer an exception ADR.
+If the builder named a specific technology, treat it as a wish for an
+outcome: use the approved equivalent and say so in one plain sentence (see
+`enterprise-standards`, "decide, don't ask").
 
 ## 3. Generate
 
-Create the layout from the golden path, then wire in **every** item of the
-baseline below — these are what make a prototype promotable later. Use the
-language's normal project generator if one exists (e.g. `npm create`,
-Spring Initializr conventions) rather than hand-writing boilerplate.
+Lay out the chosen path exactly as in `golden-paths.md`: modules by business
+capability, ports with local and production adapters, one composition file
+that selects adapters from configuration. Use the language's standard
+project generator where one exists, then reshape to the layout.
 
-**Baseline (all shapes):**
-- [ ] `README.md` — purpose, owner (TODO placeholder if unknown), tier, data classification, how to run/test/deploy (CS-01)
-- [ ] `docs/adr/0001-record-architecture-decisions.md` and `docs/adr/0002-<golden path chosen>.md` (use the `write-adr` skill; mark both Accepted only if the developer confirms)
-- [ ] `CODEOWNERS` with a TODO team
-- [ ] Formatter + linter config for the language (CS-02) and a test setup with one passing test (CS-03)
-- [ ] Config from environment with `.env.example` placeholders only; no secrets (CS-08, PAT-11)
-- [ ] Structured logging with trace/correlation ID; OpenTelemetry wired with a no-op/local exporter (PAT-13)
-- [ ] `.gitignore` that excludes env files, build output and IDE files
-- [ ] CI pipeline: lint, test, dependency/licence scan, `stack-check --strict`, container build (AP-06)
-- [ ] `Dockerfile` (non-root user, multi-stage) for deployables (PAT-17)
+**Baseline (every project):**
+- [ ] Module(s) named after the business capabilities in the request (PAT-20)
+- [ ] Standard ports with local adapters working and seeded with realistic sample data; production adapters implemented where cheap, otherwise fail-fast stubs (PAT-19)
+- [ ] Contract tests per port; one passing test per use case (CS-03)
+- [ ] One command to run locally (`npm run dev` / `make dev` / `./gradlew bootRun`), documented at the top of the README
+- [ ] Config from environment with `.env.example`; local profile is the default; no secrets anywhere (CS-08, PAT-11, NN-01)
+- [ ] Structured logging with correlation ID; OpenTelemetry wired with a local no-op exporter (PAT-13); health endpoints (PAT-14)
+- [ ] Formatter + linter config (CS-02); `.gitignore` excluding `.env*`, `.data/`, build output
+- [ ] CI pipeline: lint, test, dependency/licence scan, `stack-check --strict`, image build (AP-06)
+- [ ] `Dockerfile` (multi-stage, non-root) for each deployable (PAT-17)
+- [ ] `README.md` — what it does in business terms, how to run it, and a link to the production handoff (CS-01)
+- [ ] `docs/production-handoff.md` started via the `production-handoff` skill (or `handoff_scribe`), with the business context, the path chosen, and every port's status
+- [ ] `docs/adr/0001-golden-path.md` recording the path and any non-default choice (`write-adr`)
 
-**Plus, by shape:** see the checklist in `references/golden-paths.md`.
+Leave `TODO(engineering):` markers for enterprise-specific values (registry
+URLs, IdP issuer, namespaces) and list them in the handoff — don't invent them
+and don't ask the builder.
 
-Leave `TODO(owner):` markers for anything that needs enterprise-specific
-values (registry URLs, IdP issuer, platform namespaces) rather than inventing
-them.
+## 4. Hand over to the builder
 
-## 4. Hand over
-
-Tell the developer in a few lines: what was created, the golden path used,
-anything flagged (trial tech, TODOs that block production), and the next step
-(usually: build the first feature, then run `architecture-review`).
+Run it once yourself to confirm it starts and the sample data shows up. Then
+tell the builder in two or three plain sentences: what they can do now, the
+one command to run it, and what to ask for next. Nothing about stacks,
+adapters or standards.

@@ -5,16 +5,19 @@
 | **Status** | Proposed <!-- Proposed · Accepted · Rejected · Deprecated · Superseded by ADR-NNNN --> |
 | **Type** | Decision <!-- Decision · Exception --> |
 | **Date** | YYYY-MM-DD |
-| **Deciders** | <names / team> |
+| **Deciders** | AI agent on behalf of <builder / team> · Approver: <architecture team> |
 | **Standards affected** | <IDs, e.g. STK-33, PAT-03 — required for Exception> |
 | **Review / expiry date** | <YYYY-MM-DD — required for Exception> |
 | **Supersedes** | <ADR-NNNN or —> |
 
 ## Context
 
-What is the problem and why does it need a decision now? Include the forces:
-requirements, constraints, deadlines, team skills, and — for an exception —
-why the standard option does not fit.
+**Business need** (from the production handoff, in business terms — who, what
+information, how important): …
+
+**Technical forces**: requirements derived from that need (tier,
+classification, scale, integrations), constraints, and — for an exception —
+why the standard option does not meet the business need.
 
 ## Options considered
 
@@ -34,9 +37,11 @@ We will … because …
 
 ## Exit plan *(Exception only)*
 
-How and when we return to the standard, or what would trigger re-evaluation.
+How and when we return to the standard — usually "implement the standard
+adapter behind port <X> and switch `<CONFIG>`" (PAT-19) — or what would
+trigger re-evaluation.
 
 ## Links
 
 - Code: …
-- Ticket / design doc: …
+- Design brief / production handoff: …

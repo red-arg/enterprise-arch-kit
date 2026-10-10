@@ -6,7 +6,7 @@ Owner: TODO: Architecture team (email / channel) · Version 0.1.0 · Last review
 
 > TODO(architecture-team): illustrative defaults. Edit `stack.json`, not this file.
 
-Statuses: **adopt** (default) · **trial** (allowed, needs owner) · **hold** (no new usage) · **retire** (remove) · unlisted = unassessed.
+Statuses: **adopt** (default) · **trial** (allowed, needs owner) · **hold** (no new usage) · **retire** (remove) · **local** (local adapters and tests only, PAT-19) · unlisted = unassessed.
 
 ## Technologies
 
@@ -31,7 +31,7 @@ Statuses: **adopt** (default) · **trial** (allowed, needs owner) · **hold** (n
 | STK-31 | Data store | Redis (managed) | adopt | Caching and ephemeral state only, not system of record. |
 | STK-32 | Data store | MongoDB | trial | Document workloads with clear justification. |
 | STK-33 | Data store | MySQL | hold | Use PostgreSQL for new work. |
-| STK-34 | Data store | SQLite | hold | Local dev/tests only, never production. |
+| STK-34 | Data store | Embedded databases (PGlite, SQLite, H2) | adopt | Local adapters and tests only, behind the persistence port (PAT-19). Never in production. Prefer PostgreSQL-compatible options (PGlite, H2 in PostgreSQL mode) so the production switch is configuration only. |
 | STK-40 | Messaging | Apache Kafka (managed) | adopt | Event streaming (PAT-07). |
 | STK-41 | Messaging | RabbitMQ | hold | Existing usage only. |
 | STK-50 | Platform | Kubernetes (enterprise platform) | adopt | Default runtime for services. |
@@ -50,6 +50,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 - **adopt:** `react`, `react-dom`, `next`, `@nestjs/*`, `typescript`, `zod`, `pino`, `@opentelemetry/*`, `vitest`, `jest`, `@testing-library/*`, `eslint`, `prettier`, `pg`, `kafkajs`, `ioredis`, `axios`, `@types/*`
 - **trial:** `mongoose`, `drizzle-orm`, `prisma`, `@prisma/client`
+- **local:** `@electric-sql/pglite`, `better-sqlite3`, `msw`
 - **hold:** `express`, `moment`, `request`, `mysql`, `mysql2`, `winston`, `sequelize`
 - **retire:** `jquery`, `angular`, `left-pad`, `node-sass`, `tslint`
 
@@ -57,6 +58,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 - **adopt:** `fastapi`, `uvicorn`, `pydantic`, `pydantic-settings`, `sqlalchemy`, `alembic`, `psycopg`, `psycopg2-binary`, `httpx`, `structlog`, `opentelemetry-*`, `pytest`, `pytest-*`, `ruff`, `mypy`, `confluent-kafka`, `redis`, `pandas`, `numpy`
 - **trial:** `polars`, `pymongo`, `motor`
+- **local:** `aiosqlite`, `respx`, `fakeredis`
 - **hold:** `flask`, `django`, `requests`, `pymysql`, `mysqlclient`
 - **retire:** `nose`, `pycrypto`, `simplejson`
 
@@ -64,6 +66,7 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 - **adopt:** `org.springframework.boot:*`, `org.springframework:*`, `org.postgresql:postgresql`, `org.flywaydb:*`, `io.opentelemetry:*`, `org.apache.kafka:*`, `org.springframework.kafka:*`, `org.junit.jupiter:*`, `org.mockito:*`, `org.testcontainers:*`, `com.fasterxml.jackson.core:*`, `org.projectlombok:lombok`, `org.slf4j:*`, `ch.qos.logback:*`
 - **trial:** `org.mongodb:*`, `io.micrometer:*`
+- **local:** `com.h2database:h2`
 - **hold:** `mysql:mysql-connector-java`, `com.mysql:mysql-connector-j`, `com.rabbitmq:*`, `junit:junit`
 - **retire:** `log4j:log4j`, `commons-httpclient:commons-httpclient`
 
@@ -71,5 +74,6 @@ Names support `*` wildcards. Run the `stack-check` skill's script to audit a rep
 
 - **adopt:** `go.opentelemetry.io/*`, `github.com/jackc/pgx/*`, `github.com/stretchr/testify`
 - **trial:** `github.com/go-chi/chi/*`
+- **local:** `modernc.org/sqlite`
 - **hold:** `github.com/go-sql-driver/mysql`
 - **retire:** `github.com/pkg/errors`

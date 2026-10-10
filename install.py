@@ -29,6 +29,8 @@ DIST = ROOT / "dist"
 START = "<!-- enterprise-arch-kit:start -->"
 END = "<!-- enterprise-arch-kit:end -->"
 BLOCK_RE = re.compile(re.escape(START) + r".*?" + re.escape(END) + r"\n?", re.S)
+# Agents shipped by earlier versions of the kit, removed on install/uninstall.
+LEGACY_AGENTS = ["adr_scribe"]
 
 
 def targets(project: Path | None, user: bool) -> dict:
@@ -79,6 +81,9 @@ def kit_items(platform: str) -> tuple[list[Path], list[Path]]:
 def install(platform: str, t: dict, both: bool, uninstall: bool) -> list[str]:
     agents, skills = kit_items(platform)
     done = []
+    ext = ".md" if platform == "claude" else ".toml"
+    for legacy in LEGACY_AGENTS:
+        (t["agents"] / f"{legacy}{ext}").unlink(missing_ok=True)
     for a in agents:
         dest = t["agents"] / a.name
         if uninstall:

@@ -1,5 +1,5 @@
 name = "stack_guardian"
-description = "Fast dependency and tech-stack auditor. Classifies a repo's or change's dependencies as adopt/trial/hold/retire/unassessed and proposes approved alternatives. Use after dependencies are added or changed, or when asked whether a library or technology is allowed."
+description = "Fast dependency and tech-stack auditor. Classifies a repo's or change's dependencies against the approved stack and tells the main agent exactly which packages to swap for approved ones and what to record for production. Use after dependencies are added or changed, or when asked whether a library or technology is allowed."
 skills = ["enterprise-standards", "stack-check"]
 
 [claude]

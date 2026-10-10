@@ -3,7 +3,8 @@
 
 Reads dependency manifests (package.json, requirements*.txt, pyproject.toml,
 go.mod, pom.xml, build.gradle[.kts], *.csproj) and classifies every dependency
-as adopt / trial / hold / retire / unassessed using stack.json.
+as adopt / trial / local / hold / retire / unassessed using stack.json.
+"local" packages are allowed only in local adapters and tests (PAT-19).
 
 Standard library only. Python 3.11+.
 
@@ -30,7 +31,7 @@ from pathlib import Path
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "env", "dist", "build",
              "target", ".next", "__pycache__", ".tox", "vendor", "bin", "obj",
              ".gradle", ".idea", ".claude", ".codex", ".agents"}
-STATUS_ORDER = ["retire", "hold", "unassessed", "trial", "adopt"]
+STATUS_ORDER = ["retire", "hold", "unassessed", "local", "trial", "adopt"]
 
 
 def default_stack_path() -> Path:
@@ -190,7 +191,7 @@ def classify(ecosystem: str, name: str, packages: dict) -> str:
     key = norm_py(name) if ecosystem == "pypi" else name
     # Check the most restrictive statuses first so a specific hold/retire
     # entry wins over a broad adopt wildcard.
-    for status in ("retire", "hold", "trial", "adopt"):
+    for status in ("retire", "hold", "local", "trial", "adopt"):
         for pattern in eco.get(status, []):
             pat = norm_py(pattern) if ecosystem == "pypi" else pattern
             if fnmatch.fnmatchcase(key, pat):

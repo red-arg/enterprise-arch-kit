@@ -1,5 +1,5 @@
 {
-  "_readme": "Single source of truth for the approved tech stack. TODO(architecture-team): every entry below is an illustrative example - replace with your real radar. Statuses: adopt | trial | hold | retire. tech-stack.md is generated from this file by build.py; check_stack.py reads the 'packages' section. Package names support * wildcards.",
+  "_readme": "Single source of truth for the approved tech stack. TODO(architecture-team): every entry below is an illustrative example - replace with your real radar. Statuses: adopt | trial | hold | retire, plus 'local' for packages allowed only in local adapters and tests (PAT-19), never in production code paths. tech-stack.md is generated from this file by build.py; check_stack.py reads the 'packages' section. Package names support * wildcards.",
   "version": "0.1.0",
   "owner": "TODO: Architecture team (email / channel)",
   "last_reviewed": "TODO: YYYY-MM-DD",
@@ -23,7 +23,7 @@
     { "id": "STK-31", "category": "Data store", "name": "Redis (managed)", "status": "adopt", "notes": "Caching and ephemeral state only, not system of record." },
     { "id": "STK-32", "category": "Data store", "name": "MongoDB", "status": "trial", "notes": "Document workloads with clear justification." },
     { "id": "STK-33", "category": "Data store", "name": "MySQL", "status": "hold", "notes": "Use PostgreSQL for new work." },
-    { "id": "STK-34", "category": "Data store", "name": "SQLite", "status": "hold", "notes": "Local dev/tests only, never production." },
+    { "id": "STK-34", "category": "Data store", "name": "Embedded databases (PGlite, SQLite, H2)", "status": "adopt", "notes": "Local adapters and tests only, behind the persistence port (PAT-19). Never in production. Prefer PostgreSQL-compatible options (PGlite, H2 in PostgreSQL mode) so the production switch is configuration only." },
     { "id": "STK-40", "category": "Messaging", "name": "Apache Kafka (managed)", "status": "adopt", "notes": "Event streaming (PAT-07)." },
     { "id": "STK-41", "category": "Messaging", "name": "RabbitMQ", "status": "hold", "notes": "Existing usage only." },
     { "id": "STK-50", "category": "Platform", "name": "Kubernetes (enterprise platform)", "status": "adopt", "notes": "Default runtime for services." },
@@ -39,31 +39,36 @@
       "adopt": ["react", "react-dom", "next", "@nestjs/*", "typescript", "zod", "pino", "@opentelemetry/*", "vitest", "jest", "@testing-library/*", "eslint", "prettier", "pg", "kafkajs", "ioredis", "axios", "@types/*"],
       "trial": ["mongoose", "drizzle-orm", "prisma", "@prisma/client"],
       "hold": ["express", "moment", "request", "mysql", "mysql2", "winston", "sequelize"],
-      "retire": ["jquery", "angular", "left-pad", "node-sass", "tslint"]
+      "retire": ["jquery", "angular", "left-pad", "node-sass", "tslint"],
+      "local": ["@electric-sql/pglite", "better-sqlite3", "msw"]
     },
     "pypi": {
       "adopt": ["fastapi", "uvicorn", "pydantic", "pydantic-settings", "sqlalchemy", "alembic", "psycopg", "psycopg2-binary", "httpx", "structlog", "opentelemetry-*", "pytest", "pytest-*", "ruff", "mypy", "confluent-kafka", "redis", "pandas", "numpy"],
       "trial": ["polars", "pymongo", "motor"],
       "hold": ["flask", "django", "requests", "pymysql", "mysqlclient"],
-      "retire": ["nose", "pycrypto", "simplejson"]
+      "retire": ["nose", "pycrypto", "simplejson"],
+      "local": ["aiosqlite", "respx", "fakeredis"]
     },
     "maven": {
       "adopt": ["org.springframework.boot:*", "org.springframework:*", "org.postgresql:postgresql", "org.flywaydb:*", "io.opentelemetry:*", "org.apache.kafka:*", "org.springframework.kafka:*", "org.junit.jupiter:*", "org.mockito:*", "org.testcontainers:*", "com.fasterxml.jackson.core:*", "org.projectlombok:lombok", "org.slf4j:*", "ch.qos.logback:*"],
       "trial": ["org.mongodb:*", "io.micrometer:*"],
       "hold": ["mysql:mysql-connector-java", "com.mysql:mysql-connector-j", "com.rabbitmq:*", "junit:junit"],
-      "retire": ["log4j:log4j", "commons-httpclient:commons-httpclient"]
+      "retire": ["log4j:log4j", "commons-httpclient:commons-httpclient"],
+      "local": ["com.h2database:h2"]
     },
     "go": {
       "adopt": ["go.opentelemetry.io/*", "github.com/jackc/pgx/*", "github.com/stretchr/testify"],
       "trial": ["github.com/go-chi/chi/*"],
       "hold": ["github.com/go-sql-driver/mysql"],
-      "retire": ["github.com/pkg/errors"]
+      "retire": ["github.com/pkg/errors"],
+      "local": ["modernc.org/sqlite"]
     },
     "nuget": {
       "adopt": [],
       "trial": [],
       "hold": [],
-      "retire": []
+      "retire": [],
+      "local": []
     }
   }
 }

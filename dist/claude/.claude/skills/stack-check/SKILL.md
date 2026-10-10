@@ -1,15 +1,16 @@
 ---
 name: stack-check
-description: Check whether a technology, library or dependency is on the approved enterprise tech stack. Use before adding a dependency, when asked "can I use X?", when reviewing package.json/requirements/pom/go.mod changes, or to audit a repo's dependencies.
+description: Check whether a technology, library or dependency is on the approved enterprise tech stack. Use before adding a dependency, when asked whether X can be used, when reviewing package.json/requirements/pom/go.mod changes, or to audit a repo's dependencies.
 ---
 
 # Stack check
 
-Classify technologies and dependencies against the approved stack and steer
-the developer to compliant choices. Statuses and their meaning are defined in
-the `enterprise-standards` skill (adopt / trial / hold / retire / unassessed).
+Classify technologies and dependencies against the approved stack and pick
+the compliant option yourself. Statuses and their meaning are defined in
+the `enterprise-standards` skill (adopt / trial / local / hold / retire /
+unassessed). The builder is not technical: never hand them a library choice.
 
-## A. Single question ("can I use X?")
+## A. Single question ("can we use X?")
 
 1. Look X up in `../enterprise-standards/references/stack.json`
    (`technologies` for languages, frameworks, databases and platforms;
@@ -18,13 +19,15 @@ the `enterprise-standards` skill (adopt / trial / hold / retire / unassessed).
 
    ```
    X — <STATUS> (<STK-id or ecosystem>)
-   <one sentence on what the status means for this request>
-   Use instead: <adopt alternative>, if the status is hold/retire/unassessed
-   Next step: <none | note owner in PR | write an ADR (write-adr skill)>
+   Decision: <use X | use <adopt alternative> instead | X only in local adapters/tests>
+   Record: <nothing | trial owner needed (handoff §8) | exception ADR (write-adr)>
    ```
 
-3. If X is unlisted, say it's UNASSESSED, suggest the closest `adopt` option,
-   and offer an ADR so the architecture team can rule on it. Don't guess a status.
+3. If X is unlisted, it's UNASSESSED: use the closest `adopt` option. Only if
+   nothing approved meets the business need, use X behind a port (PAT-19) and
+   record an exception ADR. Don't guess a status.
+4. If the *builder* asked for X by name, tell them in one plain sentence what
+   you used and that it gives them the same result — no status names or IDs.
 
 ## B. Repository audit
 
@@ -42,20 +45,22 @@ python3 <this-skill-dir>/scripts/check_stack.py . --since origin/main
 - It reads package.json, requirements*.txt, pyproject.toml, go.mod, pom.xml,
   build.gradle(.kts) and *.csproj.
 
-Then report:
+Then report (to the main agent, not the builder):
 
-1. **Must address** — RETIRE (any), HOLD that is new. Give the adopt alternative for each.
-2. **Needs a decision** — UNASSESSED packages. Group trivial ones (type stubs,
-   small utilities) and call out significant ones (frameworks, DB drivers,
-   SDKs for external services). Suggest an ADR for the significant ones.
-3. **Note** — TRIAL packages (should have an owner named in the PR/README),
-   existing HOLD usage (fine to keep, don't expand).
+1. **Swap now** — RETIRE (any) and new HOLD packages, plus significant
+   UNASSESSED ones (frameworks, DB drivers, SDKs) that have an approved
+   replacement: package → replacement, and where it's imported.
+2. **Local only** — `local` packages imported outside local adapters or tests.
+3. **Record for production** — existing HOLD usage, TRIAL packages (need an
+   engineering owner), UNASSESSED packages with no approved replacement
+   (exception ADR). These go to the production handoff.
 
-Keep the report short; the developer wants the list of actions, not the
-full dependency table.
+Group trivial unassessed packages (type stubs, tiny utilities) in one line.
+Keep it short: actions, not the full dependency table.
 
 ## C. While writing code
 
 Before adding any dependency yourself, check it here first. If it isn't
-`adopt` or `trial`, choose an approved alternative and tell the developer in
-one line which one and why.
+`adopt` or `trial` (or `local` for a local adapter/test), use an approved
+alternative. Don't mention it to the builder unless they asked for the
+original by name.
