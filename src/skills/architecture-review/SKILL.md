@@ -1,6 +1,6 @@
 ---
 name: architecture-review
-description: Review code, a branch, a PR or a design against enterprise architecture standards and sort findings into what to fix now, what to record for production, and any business fact needed. Use after a piece of work is finished, before a commit or PR, or when asked to check alignment or production readiness.
+description: Review code against enterprise standards, architecture and tech stack and return a PASS / CHANGES_REQUIRED / BLOCKED verdict with findings sorted into fix now, record for production and business facts needed. Use as the mandatory final step of every implementation task (task mode), before a commit or PR, or when asked to check alignment or production readiness.
 ---
 
 # Architecture review
@@ -13,18 +13,25 @@ handoff, and only asks the builder a plain business question if one is
 genuinely needed.
 
 {{#claude}}
-For anything larger than a handful of files, delegate the review to the
-`architecture_reviewer` subagent so the exploration stays out of the main
-conversation.
+The mandatory review at the end of every task is always done by the
+`architecture_reviewer` subagent (task mode), never by the main agent itself.
+For other reviews larger than a handful of files, delegate to it too so the
+exploration stays out of the main conversation.
 {{/claude}}
 {{#codex}}
-For anything larger than a handful of files, spawn the `architecture_reviewer`
-agent so the exploration stays off the main thread, and wait for it.
+The mandatory review at the end of every task is always done by the
+`architecture_reviewer` agent (task mode), never by the main agent itself —
+spawn it and wait. For other reviews larger than a handful of files, spawn it
+too so the exploration stays off the main thread.
 {{/codex}}
 
 ## 1. Establish scope
 
-- Default: the current branch vs its base — `git diff --stat <base>...HEAD`
+- **Task mode** (the mandatory last step of every task): you're given the
+  task's base commit. Review exactly `git diff <base>..HEAD` — the task's
+  changes — plus the immediate code they touch, and end with a verdict line.
+  Keep it focused: this runs after every task.
+- Otherwise, the current branch vs its base — `git diff --stat <base>...HEAD`
   then `git diff <base>...HEAD` (try `origin/main`, `main`, `master`); if
   nothing is committed yet, `git diff HEAD`. No git: the working tree.
 - Read `docs/production-handoff.md` (business context, derived requirements,
@@ -115,3 +122,28 @@ Non-negotiable breaches always go in **Fix now**, at the top.
 
 Keep findings to one or two lines each; group repeats. Don't make the fixes
 yourself in this skill — the main agent does.
+
+## 6. Verdict (always the last line)
+
+End every report with exactly one of:
+
+```
+VERDICT: PASS
+VERDICT: CHANGES_REQUIRED
+VERDICT: BLOCKED
+```
+
+- **PASS** — no *fix now* items and no non-negotiable breach. *Record for
+  production* items, open business facts and exceptions with an ADR don't
+  block a pass.
+- **CHANGES_REQUIRED** — at least one *fix now* item: the task isn't aligned
+  with the enterprise standards, architecture or tech stack yet (e.g. a hold
+  or unassessed package with an approved replacement, infrastructure imported
+  into business code, logic in a public interface file, a missing
+  authorization check, a module reaching into another's internals).
+- **BLOCKED** — a non-negotiable (`NN-*`) is breached. It's listed first under
+  *Fix now*.
+
+Be decisive and consistent: the same finding gets the same verdict every
+time, and a re-review after fixes only checks the new changes plus whether the
+previous *fix now* items were resolved.

@@ -25,7 +25,24 @@ mentions — do the review yourself; don't delegate it again.
    to apply without asking anyone. Never phrase a finding as a choice for the
    builder.
 
+## Task mode — the gate at the end of every task
+
+You're the mandatory last step of every implementation task (after
+`test_writer` and `implementer`). When given a task's base commit:
+
+- Review only that task's changes (`git diff <base>..HEAD`) and the code they
+  directly touch; run `stack-check` with `--since <base>`.
+- Check alignment with the enterprise **standards** (coding standards,
+  non-negotiables), **architecture** (golden path, PAT-19 swappable
+  infrastructure, PAT-20 modules by capability, public interfaces free of
+  logic, functional tests only through public interfaces) and **tech stack**
+  (approved technologies and packages).
+- End with the verdict line from the skill: `VERDICT: PASS`,
+  `VERDICT: CHANGES_REQUIRED` or `VERDICT: BLOCKED`. The task can't close
+  without PASS, so be decisive: every *fix now* item must be specific enough
+  for the implementer to apply without asking anyone.
+
 ## What to return
 
-Only the final report in the skill's format. No exploration notes or raw
-command output.
+Only the final report in the skill's format, ending with the verdict line. No
+exploration notes or raw command output.

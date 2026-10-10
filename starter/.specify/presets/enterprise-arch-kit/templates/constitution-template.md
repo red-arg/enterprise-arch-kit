@@ -68,7 +68,9 @@ unit tests** by `test_writer` purely from the business requirements —
 acceptance scenarios, rules and functional edge cases — calling only each
 module's public interface in-process through the test app factory, never
 anything behind it. No browser or HTTP tests. `implementer` makes
-them pass and never changes tests. Every new test must fail before
+them pass and never changes tests, and `architecture_reviewer` must pass the
+task against the enterprise standards, architecture and tech stack before it
+closes — for every task, with no exceptions. Every new test must fail before
 implementation (no vacuous or tautological tests), and tests must be
 unchanged between red and green. The functional suite is the executable
 specification: it must still pass after any refactor behind the public interfaces.
@@ -88,8 +90,10 @@ specification: it must still pass after any refactor behind the public interface
 - **Plan gate:** every technical choice in `plan.md` cites a standard ID or is
   marked UNASSESSED; every infrastructure need has a port; any violation of
   these principles is listed under Complexity Tracking with an ADR.
-- **Test gates:** `verify-red` passes before implementation starts and
-  `verify-green` passes before a story is done (`tdd` skill).
+- **Task gate:** every task runs `test_writer` → `implementer` →
+  `architecture_reviewer`; `verify-red` passes before implementation,
+  `verify-green` after it, and `verify-task` confirms the review PASS is the
+  last step (`tdd` skill).
 - **Implementation gate:** one-command local run works; `stack-check --strict`
   passes; architecture and readability reviews run; handoff updated.
 
@@ -100,4 +104,4 @@ constitution. Amendments that add project rules are allowed; amendments that
 relax enterprise standards require an exception ADR approved by the
 architecture team.
 
-**Version**: 1.3.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization
+**Version**: 1.4.0 | **Ratified**: on project initialization | **Last Amended**: on project initialization

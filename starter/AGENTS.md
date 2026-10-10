@@ -65,15 +65,20 @@ and tech stack with little extra effort — without troubling them.
 - Keep it runnable locally with one command and no special accounts.
 - Check every dependency with `stack-check` before adding it; if it isn't
   approved, use the approved alternative without asking.
-- **Build behaviour test-first** with the `tdd` skill: `test_writer` writes
-  failing **functional tests, written as unit tests** that call only
-  modules' public interfaces, purely from the business requirements (never
-  from the code), `implementer` makes them pass (never
-  touching tests), and the red/green gates must pass before
-  anything is reported as done. You orchestrate — don't write production
-  code or tests for behaviour changes yourself. Purely cosmetic changes
-  (wording, colours, layout) and setup skip the cycle but must keep the whole
-  suite passing.
+- **Every implementation task goes through three agents, in order, with no
+  exceptions** (the `tdd` skill) — features, fixes, setup and even one-line
+  cosmetic changes:
+  1. `test_writer` writes failing **functional tests, written as unit
+     tests** that call only modules' public interfaces, purely from the
+     business requirements (or declares, with a reason, that a cosmetic or
+     setup task has no business behaviour to test);
+  2. `implementer` makes them pass and refactors, never touching tests;
+  3. `architecture_reviewer` checks the task's changes against the
+     enterprise standards, architecture and tech stack. *Fix now* items go
+     back to `implementer` and the review repeats until `VERDICT: PASS`.
+  The red, green and task gates (`verify-red`, `verify-green`,
+  `verify-task`) must pass before a task is reported as done. You
+  orchestrate — you never write tests or production code yourself.
 
 ### Delegate automatically
 
@@ -82,10 +87,11 @@ The builder never needs to name these agents:
 | Situation | Agent |
 | --- | --- |
 | Starting something new, adding a major capability, or the approach is unclear | `solution_designer` (asks business questions, decides the technical design) |
-| Any new or changed behaviour: write the failing functional tests first | `test_writer` (RED) |
-| Make the failing tests pass, stubs and refactoring | `implementer` (STUB, GREEN, REFACTOR) |
-| Dependencies were added or changed | `stack_guardian` |
-| A piece of work is finished (tests green), or before a commit/PR | `architecture_reviewer` and `readability_reviewer`, in parallel |
+| **Every task**, step 1: failing functional tests (or a no-test declaration) | `test_writer` |
+| **Every task**, step 2: stubs, make tests pass, refactor, apply review fixes | `implementer` |
+| **Every task**, step 3: alignment with standards, architecture and tech stack — must PASS | `architecture_reviewer` |
+| Dependencies were added or changed, or "can we use X?" | `stack_guardian` |
+| A user story or feature is complete (all its tasks closed) | `readability_reviewer` |
 | After design, after reviews, and whenever a decision, assumption or gap appears | `handoff_scribe` (keeps the production handoff up to date) |
 
 ### When the project uses Spec Kit
@@ -98,18 +104,21 @@ Spec Kit workflow — you run it; the builder just describes what they want:
 2. `speckit-clarify` → at most three plain business questions.
 3. `speckit-plan` → `solution_designer` decides the technical plan from the
    enterprise standards.
-4. `speckit-tasks`, then `speckit-implement` → build, review, update the
-   production handoff.
+4. `speckit-tasks`, then `speckit-implement` → every task through
+   `test_writer` → `implementer` → `architecture_reviewer`, then readability
+   review and the production handoff per user story.
 
 The enterprise preset adds these rules to every Spec Kit command. Never show
 the builder spec IDs, branches, command names or file lists unless they ask —
 tell them what they'll be able to do. Small changes to an existing feature
-don't need the full workflow.
+don't need the full Spec Kit workflow — but they still go through the three
+agents.
 
 **After reviews:** get the "fix now" items fixed without asking — they are
 technical quality, not business choices. Code fixes go to `implementer` (tests
 must stay green and untouched); test-quality findings go to `test_writer`.
-Then re-run the reviewers once.
+`architecture_reviewer` re-reviews until PASS; a readability round is re-run
+once, and its fixes go through the full three-agent flow as a new task.
 Send everything else to `handoff_scribe` as production gaps. Tell the builder
 one or two plain sentences at most (e.g. "I tidied up how the app stores data
 so it's ready to move to the company database later.").

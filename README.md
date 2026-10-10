@@ -27,9 +27,25 @@ requirements, architecture as built, the status of every swappable
 infrastructure piece, decisions and exceptions, and the remaining gaps with
 owner and effort.
 
-## Test-first: functional tests, written as unit tests
+## Every task: test writer → implementer → reviewer
 
-Every behaviour change is built test-first by two separate agents. The tests
+**Every implementation task** — feature, fix, setup or one-line cosmetic
+change — goes through three separate agents, in order, with no exceptions:
+`test_writer` → `implementer` → `architecture_reviewer`. The reviewer checks
+the task's changes against the enterprise standards, architecture and tech
+stack and returns `VERDICT: PASS`, `CHANGES_REQUIRED` or `BLOCKED`; required
+changes go back to the implementer and the review repeats until PASS. For a
+task with no business behaviour (wording, colour, setup), the test writer
+still runs first and records why no new test applies.
+
+Each step leaves a trailer in the commit history (`TDD-Step: red`,
+`TDD-Step: green`, `TDD-Review: PASS`), and `tdd_guard.py verify-task`
+closes the task only if the trail shows all three steps in order with the
+review PASS as the last commit and no changes after it.
+
+### Functional tests, written as unit tests
+
+The tests are written test-first. The tests
 are **functional** — each checks a business requirement: an acceptance
 scenario, a business rule or a functional edge case (boundaries, invalid
 input, permissions, state transitions, duplicates, not found, empty/many,
@@ -58,7 +74,8 @@ changed for the business.
    change tests.
 5. **verify-green gate** — whole suite passes **and** no test file changed
    since the red commit (a git check, so it works in both tools).
-6. **REFACTOR**, then the architecture and readability reviews.
+6. **REFACTOR**, then the **mandatory `architecture_reviewer` gate** and
+   `verify-task`. A readability review follows each completed user story.
 
 Tautologies are banned by explicit rules (no echoing inputs, no same-logic
 oracles, no `toBeDefined`-only or catch-all error assertions, no mock or
@@ -72,6 +89,7 @@ verify-red gate and the readability review.
 | `implementer` can't create, edit or delete tests | PreToolUse hook (per agent) | Instructions + verify-green git check |
 | Tests unchanged during green | verify-green | verify-green |
 | No vacuous tests | verify-red | verify-red |
+| Every task: test writer → implementer → reviewer PASS, nothing after the review | verify-task (commit trail) | verify-task (commit trail) |
 
 Purely cosmetic changes and scaffolding skip the cycle but must keep the
 suite green. The builder never sees any of this.

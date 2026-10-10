@@ -163,5 +163,85 @@ class GateTests(unittest.TestCase):
         self.assertEqual(r.returncode, 1)
 
 
+class TaskGateTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        for args in (["init", "-q", "-b", "main"], ["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+            subprocess.run(["git", *args], cwd=self.root, check=True)
+        self.commit("Scaffold", "README.md", "x")
+        self.base = self.head()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def head(self) -> str:
+        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=self.root, capture_output=True,
+                              text=True).stdout.strip()
+
+    def commit(self, message: str, path: str | None = None, content: str = "", *trailers: str):
+        if path:
+            f = self.root / path
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(content)
+            subprocess.run(["git", "add", "-A"], cwd=self.root, check=True)
+        body = message + ("\n\n" + "\n".join(trailers) if trailers else "")
+        subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", body], cwd=self.root, check=True)
+
+    def gate(self) -> subprocess.CompletedProcess:
+        return run(["verify-task", "--base", self.base], self.root)
+
+    def test_full_flow_passes(self):
+        self.commit("Add failing tests: leave balance", "test/functional/a.test.ts", "t", "TDD-Step: red")
+        self.commit("Implement leave balance", "src/modules/leave/index.ts", "c", "TDD-Step: green")
+        self.commit("Refactor", "src/modules/leave/domain/b.ts", "d", "TDD-Step: refactor")
+        self.commit("Review: leave balance", None, "", "TDD-Review: PASS")
+        r = self.gate()
+        self.assertEqual(r.returncode, 0, r.stdout)
+
+    def test_no_test_path_for_cosmetic_change_passes(self):
+        self.commit("Make approve button green", "src/web/button.css", "c",
+                    "TDD-No-Test: colour only, no business behaviour", "TDD-Step: green")
+        self.commit("Review: button colour", None, "", "TDD-Review: PASS")
+        self.assertEqual(self.gate().returncode, 0)
+
+    def test_missing_test_writer_step_fails(self):
+        self.commit("Implement", "src/a.ts", "c", "TDD-Step: green")
+        self.commit("Review", None, "", "TDD-Review: PASS")
+        r = self.gate()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no test_writer step", r.stdout)
+
+    def test_missing_review_fails(self):
+        self.commit("Add failing tests", "test/a.test.ts", "t", "TDD-Step: red")
+        self.commit("Implement", "src/a.ts", "c", "TDD-Step: green")
+        r = self.gate()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("TDD-Review: PASS", r.stdout)
+
+    def test_code_changed_after_review_fails(self):
+        self.commit("Add failing tests", "test/a.test.ts", "t", "TDD-Step: red")
+        self.commit("Implement", "src/a.ts", "c", "TDD-Step: green")
+        self.commit("Review", None, "", "TDD-Review: PASS")
+        self.commit("Sneaky change", "src/a.ts", "changed")
+        self.assertEqual(self.gate().returncode, 1)
+
+    def test_review_commit_with_file_changes_fails(self):
+        self.commit("Add failing tests", "test/a.test.ts", "t", "TDD-Step: red")
+        self.commit("Implement", "src/a.ts", "c", "TDD-Step: green")
+        self.commit("Review and tweak", "src/a.ts", "tweak", "TDD-Review: PASS")
+        r = self.gate()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("changes files", r.stdout)
+
+    def test_changes_required_then_pass_is_fine(self):
+        self.commit("Add failing tests", "test/a.test.ts", "t", "TDD-Step: red")
+        self.commit("Implement", "src/a.ts", "c", "TDD-Step: green")
+        self.commit("Review", None, "", "TDD-Review: CHANGES_REQUIRED")
+        self.commit("Apply review fixes", "src/a.ts", "fixed", "TDD-Step: green")
+        self.commit("Review", None, "", "TDD-Review: PASS")
+        self.assertEqual(self.gate().returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

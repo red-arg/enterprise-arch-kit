@@ -11,6 +11,12 @@ Cycle gates (any tool; read JUnit XML files or folders of them):
       skipped, and not error because the test file can't load.
   tdd_guard.py verify-green --since <red-commit> --results <junit...>
       All tests pass, and no test file changed since the red commit.
+  tdd_guard.py verify-task --base <commit-before-the-task>
+      The task went through test_writer -> implementer -> architecture_reviewer,
+      read from commit trailers since <base>:
+        TDD-Step: red          (or TDD-No-Test: <reason>)  - test_writer
+        TDD-Step: green                                    - implementer
+        TDD-Review: PASS       on the LAST commit, which must change no files
 
   tdd_guard.py is-test <path>     # debugging: classify a path
 
@@ -297,6 +303,78 @@ def verify_green(since: str, results: list[str]) -> int:
     return 0 if ok else 1
 
 
+# ---------------------------------------------------------------- task
+TRAILER = re.compile(r"^(TDD-[A-Za-z-]+):[ \t]*(.+?)\s*$", re.M)
+
+
+def _task_commits(base: str, root: Path) -> list[dict]:
+    out = subprocess.run(["git", "log", "--reverse", "--format=%H%x1f%B%x1e", f"{base}..HEAD"],
+                         cwd=root, capture_output=True, text=True)
+    if out.returncode != 0:
+        raise SystemExit(f"git log failed: {out.stderr.strip()}")
+    commits = []
+    for chunk in out.stdout.split("\x1e"):
+        if not chunk.strip():
+            continue
+        sha, _, body = chunk.strip("\n").partition("\x1f")
+        files = subprocess.run(["git", "show", "--name-only", "--format=", sha], cwd=root,
+                               capture_output=True, text=True).stdout.split()
+        trailers = {}
+        for key, value in TRAILER.findall(body):
+            trailers.setdefault(key, []).append(value)
+        commits.append({"sha": sha[:10], "subject": body.splitlines()[0] if body else "",
+                        "trailers": trailers, "files": files})
+    return commits
+
+
+def verify_task(base: str) -> int:
+    root = _root()
+    commits = _task_commits(base, root)
+    problems = []
+    if not commits:
+        print(f"TASK gate FAILED: no commits since {base}.")
+        return 1
+
+    def index_of(key: str, value: str | None = None) -> int:
+        for i, c in enumerate(commits):
+            vals = c["trailers"].get(key, [])
+            if vals and (value is None or any(v.upper() == value for v in vals)):
+                return i
+        return -1
+
+    red, no_test = index_of("TDD-Step", "RED"), index_of("TDD-No-Test")
+    green = index_of("TDD-Step", "GREEN")
+    last = commits[-1]
+    review = [v.upper() for v in last["trailers"].get("TDD-Review", [])]
+
+    if red < 0 and no_test < 0:
+        problems.append("no test_writer step: expected a commit with 'TDD-Step: red' or 'TDD-No-Test: <reason>'.")
+    if green < 0:
+        problems.append("no implementer step: expected a commit with 'TDD-Step: green'.")
+    elif red >= 0 and green < red:
+        problems.append("the green commit comes before the red commit - tests must be written first.")
+    if "PASS" not in review:
+        problems.append("the last commit must carry 'TDD-Review: PASS' from architecture_reviewer "
+                        f"(found: {', '.join(review) or 'none'}).")
+    elif last["files"]:
+        problems.append("the review commit changes files - code changed after the review. Re-run "
+                        "architecture_reviewer and record its verdict in an empty commit.")
+    if green >= 0 and len(commits) - 1 <= green and "PASS" in review:
+        problems.append("the review must come after the implementation, in its own commit.")
+
+    steps = []
+    for c in commits:
+        tags = ", ".join(f"{k.replace('TDD-', '')}={'/'.join(v)}" for k, v in c["trailers"].items()) or "-"
+        steps.append(f"  {c['sha']}  {c['subject'][:60]}  [{tags}]")
+    print(f"TASK gate: {len(commits)} commit(s) since {base}")
+    print("\n".join(steps))
+    for prob in problems:
+        print(f"  FAILED  {prob}")
+    if not problems:
+        print("  OK  test_writer -> implementer -> architecture_reviewer (PASS)")
+    return 1 if problems else 0
+
+
 # ---------------------------------------------------------------- cli
 def _opt(args: list[str], name: str) -> list[str]:
     if name not in args:
@@ -330,6 +408,12 @@ def main(argv: list[str]) -> int:
             print("verify-green needs --since <red-commit>")
             return 2
         return verify_green(since[0], _opt(rest, "--results"))
+    if cmd == "verify-task":
+        base = _opt(rest, "--base")
+        if not base:
+            print("verify-task needs --base <commit before the task started>")
+            return 2
+        return verify_task(base[0])
     if cmd == "is-test" and rest:
         cfg = _boundary(_root())
         rel = _rel(rest[0], _root())

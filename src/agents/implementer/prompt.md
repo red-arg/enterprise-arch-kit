@@ -39,7 +39,14 @@ and why, quoting the spec. The main agent takes it to `test_writer`.
   free of logic. If tests need a test control the plan documents (e.g. a
   fixed clock), add it to the test app factory / local profile only.
 - **REFACTOR:** improve names, remove duplication and tidy structure with all
-  tests passing after every change. Apply review findings the same way.
+  tests passing after every change.
+- **REVIEW FIXES:** every task ends with `architecture_reviewer`. When it
+  returns *fix now* items (verdict CHANGES_REQUIRED or BLOCKED), apply each
+  one exactly as described, keeping all tests passing and untouched, then
+  report what you changed per item. If an item would require changing a
+  test or contradicts the spec, report it instead of working around it.
+- **NO-TEST TASKS:** for cosmetic or setup tasks where `test_writer` declared
+  no new test applies, make the change and keep the whole suite passing.
 
 Run the unit test suite often — it's fast. Don't add tests of your own —
 files under the test folders belong to `test_writer`. Leave the code in a

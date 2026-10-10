@@ -3,7 +3,7 @@ schema_version: "1.0"
 preset:
   id: "enterprise-arch-kit"
   name: "Enterprise Architecture Kit"
-  version: "1.3.0"
+  version: "1.4.0"
   description: "Business-only specs and clarifications for non-technical builders; technical plans decided by the enterprise solution_designer on the approved stack."
   author: "enterprise-arch-kit"
   repository: "https://github.com/red-arg/enterprise-arch-kit"
@@ -74,7 +74,7 @@ provides:
     - type: "command"
       name: "speckit.implement"
       file: "commands/speckit.implement.md"
-      description: "Implement on the golden path, then review and update the production handoff"
+      description: "Every task through test_writer, implementer and architecture_reviewer, with gates"
       strategy: "append"
 
 tags:

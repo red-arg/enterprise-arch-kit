@@ -1,5 +1,5 @@
 name = "implementer"
-description = "Adds public-interface stubs, makes failing functional unit tests pass with the simplest code on the enterprise golden path, then refactors with the suite green - never creates, edits or deletes tests. Use for the STUB, GREEN and REFACTOR steps of the tdd skill."
+description = "Adds public-interface stubs, makes failing functional unit tests pass with the simplest code on the enterprise golden path, refactors with the suite green and applies architecture_reviewer fix-now items - never creates, edits or deletes tests. Use for the STUB, GREEN, REFACTOR and review-fix steps of every task."
 skills = ["tdd", "enterprise-standards", "stack-check", "scaffold-service"]
 
 [claude]

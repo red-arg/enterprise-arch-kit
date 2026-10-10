@@ -1,39 +1,49 @@
 ---
 name: tdd
-description: Test-first build cycle for every behaviour change - test_writer writes failing functional tests, in the form of in-process unit tests, from the business requirements and calls only modules' public interfaces; implementer makes them pass without touching tests; automatic gates catch vacuous tests and test tampering. Use whenever adding or changing behaviour (features, business rules, fixes).
+description: Mandatory three-agent flow for every implementation task - test_writer writes failing functional tests (in-process unit tests through modules' public interfaces) from the business requirements, implementer makes them pass without touching tests, and architecture_reviewer checks the result against enterprise standards, architecture and tech stack before the task is done. Gates catch vacuous tests, test tampering and skipped steps. Use for every task that changes the project.
 ---
 
-# Test-first build cycle
+# Every task: test_writer → implementer → architecture_reviewer
 
-Every behaviour change is built test-first by two separate agents:
+**Every single implementation task** — a feature, a business rule, a fix, a
+setup step, even a one-line cosmetic change — goes through three separate
+agents, in this order, with no exceptions:
 
-- **`test_writer`** turns the business requirements into failing
-  **functional tests written as unit tests**: in-process, with the project's
-  unit test framework, calling only each module's **public interface**
-  through the **test app factory** (in-memory local profile). They check
-  business outcomes, including functional edge cases. No browser, no
-  Playwright, no HTTP, no running server. It never sees anything behind the
-  public interface, so everything there can later be refactored onto
-  enterprise standards and the same tests prove the business behaviour is
-  unchanged. Rules, edge-case checklist and the tautology ban:
-  `references/test-rules.md`.
-- **`implementer`** makes those tests pass. It never creates, edits or deletes
-  tests. If a test seems wrong, it reports back instead.
+1. **`test_writer`** turns the business requirements into failing
+   **functional tests written as unit tests**: in-process, with the project's
+   unit test framework, calling only each module's **public interface**
+   through the **test app factory**. They check business outcomes, including
+   functional edge cases. No browser, no Playwright, no HTTP, no running
+   server. It never sees anything behind the public interface, so everything
+   there can later be refactored onto enterprise standards and the same tests
+   prove the business behaviour is unchanged. Rules, edge-case checklist and
+   the tautology ban: `references/test-rules.md`.
+2. **`implementer`** makes those tests pass and refactors. It never creates,
+   edits or deletes tests. If a test seems wrong, it reports back instead.
+3. **`architecture_reviewer`** reviews the task's changes against the
+   enterprise standards, architecture and tech stack. The task is done only
+   when its verdict is **PASS**.
 
-You (the main agent) run the cycle and the gates. The builder never sees any
-of it — they hear about outcomes ("You can now approve requests. Saved.").
+You (the main agent) orchestrate and run the gates — you never write tests
+or production code yourself. The builder never sees any of it; they hear
+about outcomes ("You can now approve requests. Saved.").
 
-## When to use it
+## What counts as a task
 
-- **Yes:** new features, business rules, calculations, permissions,
-  validations, integrations, bug fixes (the first test reproduces the bug).
-- **No:** purely cosmetic changes (wording, colours, layout, spacing) and
-  scaffolding/tooling setup. Make those directly, then run the whole suite —
-  it must stay green.
-- **Never:** tests of internal parts (classes, use-case internals, ports,
-  adapters, storage), and no browser, HTTP or end-to-end tests. Only
-  functional unit tests through public interfaces are written in this cycle;
-  engineering may add others during production hardening.
+The smallest unit of work you'd describe as one change: a Spec Kit task, one
+acceptance scenario or rule, one fix, one cosmetic tweak, one setup step.
+Several tiny related changes requested together may be one task. Never batch
+unrelated changes to save reviews.
+
+## Tasks with no business behaviour
+
+For wording, colours, layout, tooling or setup, `test_writer` still runs
+first. It checks whether any business behaviour is affected; if not, it
+returns a **no-test declaration** with the reason (e.g. "colour only — no
+business behaviour"), and confirms the existing suite still describes the
+behaviour. Record it as a `TDD-No-Test: <reason>` trailer, skip STUB and
+verify-red, and continue with GREEN and the review. A no-test declaration is
+never acceptable for anything a user could observe as different behaviour.
 
 ## The public interface and the test app factory
 
@@ -50,25 +60,25 @@ of it — they hear about outcomes ("You can now approve requests. Saved.").
 - Functional tests live in `test/functional/<capability>/` and run with the
   normal unit test command. They're fast — run them constantly.
 
-## The cycle (per slice: one user story or a few acceptance scenarios)
+## The flow for one task
 
-Scripts below are in this skill's `scripts/` folder. Test results go in
-`.tdd/` (git-ignored). Use JUnit XML output — see *Running the suite*.
+Scripts are in this skill's `scripts/` folder; results go in `.tdd/`
+(git-ignored); use JUnit XML output (see *Running the suite*). Note the
+commit before you start — the task's **base**.
 
-**0. Baseline.** Run the whole suite → `.tdd/before/`. It should be green; if
-not, fix that first (outside this cycle).
+**0. Baseline.** Run the whole suite → `.tdd/before/`. It must be green; if
+not, fix that first as its own task.
 
-**1. RED — `test_writer`.** Delegate with: the slice (spec path and scenario
+**1. RED — `test_writer`.** Delegate with: the task (spec path and scenario
 IDs, or the request in plain words), the plan's acceptance examples and
-*Functional Test Boundary* (public operations, factory, test controls). It
-returns the test files with a scenario ID and "Catches" note per test, plus
-any gaps in the public interface or test controls. Commit: `Add failing tests: <behaviour>` and note
-the commit id (the *red commit*).
+*Functional Test Boundary*. It returns failing tests with a scenario ID and
+`Catches:` note per test — or a no-test declaration. Commit the tests:
+`Add failing tests: <behaviour>` with trailer `TDD-Step: red`, and note it as
+the *red commit*.
 
 **2. STUB — `implementer`** (only for operations that don't exist yet). Add
-each new operation to the module's public interface with its input/output
-types and business errors, throwing a "not implemented" error. No logic. The
-test app factory must still build.
+each new operation to the module's public interface with its types and
+business errors, throwing "not implemented". No logic.
 
 **3. Verify red (gate).** Run the suite → `.tdd/after-red/`, then
 
@@ -77,19 +87,16 @@ python3 <tdd-skill>/scripts/tdd_guard.py verify-red --before .tdd/before --after
 ```
 
 - **VACUOUS** (a new test passes before implementation): if the stub contains
-  logic, have the implementer strip it back to a stub; otherwise send the
-  test back to `test_writer` to fix or delete — it's tautological, or the
-  behaviour already exists (then it's kept as a regression test, explicitly).
+  logic, have the implementer strip it back; otherwise send the test back to
+  `test_writer` to fix or delete (or keep it explicitly as a regression test).
 - **WRONG REASON** (test can't load or the app can't be built): the
   implementer adds the missing stub or fixes the factory.
 - **SKIPPED**: back to `test_writer`.
-Repeat until the gate passes. Amend the red commit if tests changed.
+Repeat until it passes; amend the red commit if tests changed.
 
-**4. GREEN — `implementer`.** Delegate with: the red commit id, the failing
-tests, the plan. It writes the simplest code that passes them, on the golden
-path (modules, ports, local adapters), running the suite as it goes. It doesn't
-add tests of its own — test files belong to `test_writer` — it verifies its
-work with the functional suite.
+**4. GREEN — `implementer`.** Delegate with: the red commit, the failing
+tests, the plan. It writes the simplest code that passes them on the golden
+path, then refactors with the suite green.
 
 **5. Verify green (gate).** Run the suite → `.tdd/after-green/`, then
 
@@ -98,16 +105,44 @@ python3 <tdd-skill>/scripts/tdd_guard.py verify-green --since <red-commit> --res
 ```
 
 It fails if any test isn't passing **or any test file changed after the red
-commit**. If tests were touched, revert those changes
-(`git checkout <red-commit> -- <test files>`) and send the implementer back.
-If the implementer reported a wrong test, take it to `test_writer` with the
-spec reference — the spec decides, never the implementation. Commit:
-`Implement <behaviour>`.
+commit** (revert test changes with `git checkout <red-commit> -- <files>` and
+send the implementer back). If the implementer reported a wrong test, take it
+to `test_writer` with the spec reference — the spec decides. Commit:
+`Implement <behaviour>` with trailer `TDD-Step: green` (no-test tasks: add
+`TDD-No-Test: <reason>` to this commit).
 
-**6. REFACTOR — `implementer`.** Improve structure with the suite green and
-tests untouched; then verify green again and commit. Then run the reviews
-(`architecture_reviewer`, `readability_reviewer`) as usual; fixes they
-require go through the implementer and must keep the gate green.
+**6. REVIEW — `architecture_reviewer` (mandatory).** Delegate in *task
+mode* with the task's base commit and a one-line description. It reviews the
+task's diff against the enterprise standards, architecture and tech stack
+(running `stack-check`) and ends with `VERDICT: PASS`, `CHANGES_REQUIRED` or
+`BLOCKED`.
+
+- **PASS** → record it in an **empty** commit:
+  `git commit --allow-empty -m "Review: <task>" -m "TDD-Review: PASS"`.
+- **CHANGES_REQUIRED** → optionally record `TDD-Review: CHANGES_REQUIRED` in
+  an empty commit, send the *fix now* items to `implementer` (tests untouched,
+  verify-green again, commit with `TDD-Step: green`), then review again.
+  Findings about test quality go to `test_writer`. After two rounds, record
+  what's left as production gaps via `handoff_scribe` only if the reviewer
+  marked them *record for production*; *fix now* items must be fixed.
+- **BLOCKED** (non-negotiable breached) → fix before anything else; the task
+  can't close until a later review passes.
+
+**7. Close the task (gate).**
+
+```bash
+python3 <tdd-skill>/scripts/tdd_guard.py verify-task --base <task-base-commit>
+```
+
+It checks the commit trail since the base: a `TDD-Step: red` (or
+`TDD-No-Test`) commit, a `TDD-Step: green` commit after it, and the **last**
+commit carrying `TDD-Review: PASS` with no file changes — so nothing changed
+after the review. Only then is the task done. Then tell the builder the
+outcome in plain words.
+
+**Per user story (in addition):** when all its tasks are closed, run
+`readability_reviewer` and have `handoff_scribe` update the production
+handoff; readability fixes go through the same flow as a new task.
 
 ## Functional tests and productionization
 
@@ -141,6 +176,7 @@ Make sure `.tdd/` is in `.gitignore`.
 | implementer never changes tests | Hook blocks writes/deletes of test files | Agent instructions |
 | Tests unchanged during green | `verify-green` git check | `verify-green` git check |
 | No vacuous/tautological tests | `verify-red` gate + rules + readability review | same |
+| Every task went test_writer → implementer → reviewer PASS | `verify-task` (commit trail) | `verify-task` (commit trail) |
 
 Folders treated as tests, implementation and public interface can be tuned
 per project in `.tdd-boundary.json` (see the script's header).

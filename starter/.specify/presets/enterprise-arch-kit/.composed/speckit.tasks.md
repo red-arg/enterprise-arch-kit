@@ -233,9 +233,13 @@ Apply the *Enterprise Task Rules* section of the tasks template. Tests are
   phase; ports get no tests of their own.
 - Only functional unit test tasks through public interfaces: no tests of
   internal parts, no browser or HTTP tests.
-- Every user story as the test-first cycle in order: `[RED] test_writer` →
-  `[STUB] implementer` → `[GATE] verify-red` → `[GREEN] implementer` →
-  `[GATE] verify-green` → `[REFACTOR] implementer` → `[REVIEW]` →
+- **Every task** (setup, foundational, story, polish) runs through
+  `test_writer` → `implementer` → `architecture_reviewer` (must PASS), as in
+  the template: `[RED]` → `[STUB]` → `[GATE] verify-red` → `[GREEN]` →
+  `[GATE] verify-green` → `[REVIEW] architecture_reviewer` →
+  `[GATE] verify-task`. No-behaviour tasks get a no-test declaration from
+  `test_writer` instead of tests, never a skipped step.
+- Per completed user story: `[REVIEW] readability_reviewer` and
   `[HANDOFF] handoff_scribe`.
 - Tasks grouped by module (business capability) with module-layout paths.
 - No task asks the builder a technical question.

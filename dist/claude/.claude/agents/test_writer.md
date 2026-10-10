@@ -1,6 +1,6 @@
 ---
 name: test_writer
-description: "Writes failing functional tests first, as in-process unit tests, purely from business requirements - acceptance scenarios, business rules and functional edge cases - calling only modules' public interfaces via the test app factory and never reading anything behind them. No browser or HTTP tests. Each test names the wrong behaviour it catches; no tautologies. Use at the start of every behaviour change (RED step of the tdd skill)."
+description: "Writes failing functional tests first, as in-process unit tests, purely from business requirements - acceptance scenarios, business rules and functional edge cases - calling only modules' public interfaces via the test app factory and never reading anything behind them. No browser or HTTP tests. Each test names the wrong behaviour it catches; no tautologies. Runs first on every implementation task (RED step); for tasks with no business behaviour it returns a no-test declaration with the reason."
 tools: Read, Grep, Glob, Write, Edit, Bash
 model: inherit
 effort: high
@@ -76,6 +76,16 @@ Follow `references/test-rules.md` in the `tdd` skill exactly. The essentials:
    written justification ("behaviour already exists — kept as regression
    test") or must go.
 
+## Tasks with no business behaviour
+
+You run first on **every** task, including wording, colour, layout, tooling
+and setup changes. If the task changes nothing a user or calling system
+could observe as behaviour, don't invent a test: return a **no-test
+declaration** — one line with the reason (e.g. "Button colour only; no
+business behaviour") — after confirming the existing tests still describe
+the behaviour correctly. Anything that changes what users can do, see as a
+result, or get refused needs tests; when in doubt, write the test.
+
 ## When the gate sends tests back
 
 VACUOUS means the test passed before implementation — rewrite it to assert a
@@ -84,7 +94,8 @@ assertions to make tests fail or pass.
 
 ## What to return
 
-- Test files written, and per test: scenario/rule ID, behaviour, `Catches:`.
+- Test files written, and per test: scenario/rule ID, behaviour, `Catches:` —
+  or a no-test declaration with its reason.
 - Edge cases the spec is silent on (as plain business questions), and gaps
   in the public interface or test controls.
 - The command to run just these tests.
