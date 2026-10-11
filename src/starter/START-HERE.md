@@ -22,12 +22,7 @@ idea takes off, the technology team can take it live without starting over.
    - `codex` — for Codex
 
    The first time, it will ask you to sign in. Follow the steps on screen.
-4. **Run the setup once.** Type:
-   - in Claude Code: `/install`
-   - in Codex: `$install`
-
-   It will ask your name and team, then tell you you're ready.
-5. **Just ask.** Describe what you'd like, for example:
+4. **Just ask.** Describe what you'd like, for example:
    - "Make a simple app where my team can request leave and I can approve it."
    - "Build a dashboard of how many support tickets we get each week."
    - "Create a form for new joiners to submit their details."

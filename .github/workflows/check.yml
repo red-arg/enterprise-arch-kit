@@ -20,10 +20,15 @@ jobs:
         run: python3 dist/codex/.agents/skills/stack-check/scripts/check_stack.py . --json > /dev/null
       - name: Installer round-trip
         run: |
-          mkdir -p /tmp/proj
+          mkdir -p /tmp/proj/.claude/skills/install /tmp/own/.claude/skills/install
+          printf '# Install — get ready to build\n' > /tmp/proj/.claude/skills/install/SKILL.md
+          printf '# Our own install skill\n' > /tmp/own/.claude/skills/install/SKILL.md
           python3 install.py /tmp/proj
           python3 install.py /tmp/proj
           test "$(grep -c 'enterprise-arch-kit:start' /tmp/proj/AGENTS.md)" = 1
+          test ! -e /tmp/proj/.claude/skills/install
+          python3 install.py /tmp/own
+          test -f /tmp/own/.claude/skills/install/SKILL.md
           python3 install.py /tmp/proj --uninstall
           test ! -e /tmp/proj/AGENTS.md
 
@@ -43,8 +48,8 @@ jobs:
           cp -r starter /tmp/vibe && cd /tmp/vibe
           git init -q -b main && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm "from template"
           python3 -c "import json; json.load(open('.devcontainer/devcontainer.json'))"
-          grep -q "disable-model-invocation: true" .claude/skills/install/SKILL.md
-          grep -q "allow_implicit_invocation: false" .agents/skills/install/agents/openai.yaml
+          test ! -e .claude/skills/install && test ! -e .agents/skills/install
+          grep -q "There is no setup step for the builder" AGENTS.md
           grep -q "hook test-writer" .claude/agents/test_writer.md
           grep -q "hook implementer" .claude/agents/implementer.md
           test -f .codex/agents/test_writer.toml && test -f .codex/agents/implementer.toml

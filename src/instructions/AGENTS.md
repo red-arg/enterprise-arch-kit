@@ -39,11 +39,24 @@ and tech stack with little extra effort — without troubling them.
 
 ### First run and saving work
 
-- The builder normally runs the `install` skill once (`/install` in Claude
-  Code, `$install` in Codex). If they skip it and just ask for something, do
-  its essential steps silently before building — make sure the project is a
-  git repository with an identity, and start `docs/production-handoff.md` —
-  then get on with their request.
+- **There is no setup step for the builder.** They just ask for what they
+  want. The first time you change anything in a project without
+  `docs/production-handoff.md`, do this quietly before building:
+  1. Not a git repository → `git init -b main`. No git name or email →
+     ask for them in plain words ("Which name and email should I put on your
+     saved work?"), in the same message as any business questions. In
+     GitHub Codespaces they're already set.
+  2. Start `docs/production-handoff.md` (`production-handoff` skill). Put the
+     git user name as business owner, marked **Assumed**, and add "Who owns
+     this after launch (name and team)?" to §9. Q8 confirms it before go-live,
+     so don't spend one of the three business questions on it now.
+  3. If the `enterprise-standards` references still contain
+     `TODO(architecture-team)` placeholders, add to §9: "Enterprise standards
+     in this kit are still illustrative placeholders — owner: Architecture".
+  4. Commit with the message `Set up project`, then get on with the request.
+  If the app needs a runtime that isn't installed (Node.js, Python, Java),
+  don't install system software. Tell the builder in one plain sentence to
+  open the project in GitHub Codespaces or ask IT.
 - **Save automatically.** Commit after every working step (a slice that
   runs, a fix, a finished review round) with a plain message like "Add leave
   request form". Never leave work uncommitted at the end of a turn. Tell the

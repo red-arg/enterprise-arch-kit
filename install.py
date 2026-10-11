@@ -37,6 +37,17 @@ END = "<!-- enterprise-arch-kit:end -->"
 BLOCK_RE = re.compile(re.escape(START) + r".*?" + re.escape(END) + r"\n?", re.S)
 # Agents shipped by earlier versions of the kit, removed on install/uninstall.
 LEGACY_AGENTS = ["adr_scribe"]
+# Skills shipped by earlier versions, with a line that identifies the kit's copy
+# so a project's own skill of the same name is never removed.
+LEGACY_SKILLS = {"install": "# Install — get ready to build"}
+
+
+def remove_legacy_skills(skills_dir: Path) -> None:
+    for name, marker in LEGACY_SKILLS.items():
+        skill = skills_dir / name
+        md = skill / "SKILL.md"
+        if md.is_file() and marker in md.read_text():
+            shutil.rmtree(skill)
 
 
 def targets(project: Path | None, user: bool) -> dict:
@@ -90,6 +101,7 @@ def install(platform: str, t: dict, both: bool, uninstall: bool) -> list[str]:
     ext = ".md" if platform == "claude" else ".toml"
     for legacy in LEGACY_AGENTS:
         (t["agents"] / f"{legacy}{ext}").unlink(missing_ok=True)
+    remove_legacy_skills(t["skills"])
     for a in agents:
         dest = t["agents"] / a.name
         if uninstall:

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Install"
-  short_description: "Get this project ready to build - run once"
-  default_prompt: "Set up this project for me"
-
-policy:
-  allow_implicit_invocation: false

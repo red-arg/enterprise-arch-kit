@@ -122,7 +122,6 @@ suite green. The builder never sees any of this.
 | `architecture-review` | Standards and productionizability review, sorted into *fix now* (main agent), *record for production* (handoff), *business fact needed* and *exceptions*. |
 | `tdd` | Test-first cycle: RED (`test_writer`) → STUB → verify-red gate → GREEN (`implementer`) → verify-green gate → REFACTOR. Test rules ban tautological tests; `tdd_guard.py` provides the gates and Claude Code hooks. |
 | `readability-review` | *The Pragmatic Programmer* review (`RD-01`–`RD-16`: ETC, DRY, orthogonality, naming, crash early…), sorted into *fix now* and *record*. |
-| `install` | One-time, explicit-only setup for the builder (`/install` / `$install`): workspace checks, automatic saving, project owner, handoff started, plain-language "you're ready". |
 | `write-adr` | ADRs for decisions and exceptions made by the agents on the builder's behalf, awaiting architecture approval. |
 
 ### Subagents
@@ -179,17 +178,16 @@ What a builder does (also in `starter/START-HERE.md`, written for them):
 1. **Use this template** → create their own repository.
 2. **Code → Codespaces → Create codespace.**
 3. Type `claude` or `codex` in the terminal and sign in.
-4. Run **`/install`** (Claude Code) or **`$install`** (Codex) once — it asks
-   their name and team, prepares automatic saving, starts the production
-   handoff, and tells them they're ready.
-5. From then on they just describe what they want.
+4. They describe what they want. There is no setup command.
 
-`install` is explicit-only (`disable-model-invocation` in Claude Code,
-`allow_implicit_invocation: false` in Codex), so requests like "install a
-chart library" never trigger it. If someone skips it, the main agent does the
-essential setup silently. Work is committed automatically at every working
-step and described in plain words ("Saved."); pushing to GitHub happens when
-the builder asks or accepts a one-time offer.
+On the first change in a new project, the main agent sets things up quietly:
+- It initializes git if needed, and asks for a name and email only if none is set. Codespaces already has them.
+- It starts the production handoff, with the owner marked Assumed and listed for confirmation before go-live.
+- It records it if the standards are still placeholders.
+
+Work is committed automatically at every working step and described in plain
+words ("Saved."). Pushing to GitHub happens when the builder asks or accepts a
+one-time offer.
 
 **Publishing the starter:** create an empty repository (e.g.
 `enterprise-vibe-starter`), copy the contents of `starter/` into it, push,
